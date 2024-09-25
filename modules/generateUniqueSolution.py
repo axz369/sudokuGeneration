@@ -4,144 +4,190 @@ import pulp
 from utility.printBoard import printBoard
 
 
-def generateUniqueSolution(board, MAX_SOLUTIONS):
-    start_time = time.time()
+def generateUniqueSolution(board, maxSolutions):
+    startTime = time.time()
     numberOfHintsAdded = 0  # 追加したヒントの数をカウントする変数
-    numberOfGeneratedBoards = []  # 各内部ループで生成された解の数を保存するリスト
+    numberOfGeneratedBoards = []  # 生成された解の数を保存するリスト
 
     print("唯一解生成開始")
     size = len(board)
-    max_solutions = MAX_SOLUTIONS  # 生成する解の最大数
+    maxSolutions = maxSolutions  # 生成する解の最大数
 
-    while True:  # 外部ループ:内部ループ内で解盤面が一つしか見つからなくなったら終了
-        solution_count = 0  # 解の数をカウント
+    # 解盤面を保存するリスト
+    solutions = []
 
-        # 111~999の連続した配列 (0-indexedなので実際は[0][0][0]から[8][8][8])
-        occurrence_count = [
-            [[0 for _ in range(size)] for _ in range(size)] for _ in range(size)]
+    # 111~999の連続した配列 (0-indexedなので実際は[0][0][0]から[8][8][8])
+    occurrenceCount = [
+        [[0 for _ in range(size)] for _ in range(size)] for _ in range(size)]
 
-        problem = pulp.LpProblem("Sudoku", pulp.LpMinimize)
+    # 数独の制約問題を定義
+    problem = pulp.LpProblem("Sudoku", pulp.LpMinimize)
 
-        # 決定変数の作成
-        isValueInCell = pulp.LpVariable.dicts("IsValueInCell",
-                                              (range(size), range(size),
-                                               range(1, size + 1)),
-                                              cat='Binary')
+    # 決定変数の作成
+    isValueInCell = pulp.LpVariable.dicts("IsValueInCell",
+                                          (range(size), range(size),
+                                           range(1, size + 1)),
+                                          cat='Binary')
 
-        # 制約条件の追加
-        # 1. 各マスには1つの数字のみが入る
-        for i in range(size):
-            for j in range(size):
-                problem += pulp.lpSum([isValueInCell[i][j][k]
-                                      for k in range(1, size + 1)]) == 1
-
-        # 2. 各行には1から9の数字が1つずつ入る
-        for i in range(size):
-            for k in range(1, size + 1):
-                problem += pulp.lpSum([isValueInCell[i][j][k]
-                                      for j in range(size)]) == 1
-
-        # 3. 各列には1から9の数字が1つずつ入る
+    # 制約条件の追加（同じまま）
+    # 1. 各マスには1つの数字のみが入る
+    for i in range(size):
         for j in range(size):
+            problem += pulp.lpSum([isValueInCell[i][j][k]
+                                   for k in range(1, size + 1)]) == 1
+
+    # 2. 各行には1から9の数字が1つずつ入る
+    for i in range(size):
+        for k in range(1, size + 1):
+            problem += pulp.lpSum([isValueInCell[i][j][k]
+                                   for j in range(size)]) == 1
+
+    # 3. 各列には1から9の数字が1つずつ入る
+    for j in range(size):
+        for k in range(1, size + 1):
+            problem += pulp.lpSum([isValueInCell[i][j][k]
+                                   for i in range(size)]) == 1
+
+    # 4. 各3x3ブロックには1から9の数字が1つずつ入る
+    blockSize = int(size ** 0.5)
+    for bi in range(blockSize):
+        for bj in range(blockSize):
             for k in range(1, size + 1):
                 problem += pulp.lpSum([isValueInCell[i][j][k]
-                                      for i in range(size)]) == 1
+                                       for i in range(bi * blockSize, (bi + 1) * blockSize)
+                                       for j in range(bj * blockSize, (bj + 1) * blockSize)]) == 1
 
-        # 4. 各3x3ブロックには1から9の数字が1つずつ入る
-        block_size = int(size ** 0.5)
-        for bi in range(block_size):
-            for bj in range(block_size):
-                for k in range(1, size + 1):
-                    problem += pulp.lpSum([isValueInCell[i][j][k]
-                                           for i in range(bi * block_size, (bi + 1) * block_size)
-                                           for j in range(bj * block_size, (bj + 1) * block_size)]) == 1
+    # 5. 初期値（ヒント）の設定
+    for i in range(size):
+        for j in range(size):
+            if board[i][j] != 0:
+                problem += isValueInCell[i][j][board[i][j]] == 1
 
-        # 5. 初期値（ヒント）の設定
+    # 解の生成フェーズ
+    solutionCount = 0
+    while solutionCount < maxSolutions:
+        currentTime = time.time()
+        if currentTime - startTime > 1800:  # 30分（1800秒）を超えた場合
+            print("30分を超えたため処理を終了します。")
+            return None, numberOfHintsAdded, numberOfGeneratedBoards  # numberOfGeneratedBoardsも返す
+
+        # 問題を解く
+        status = problem.solve(pulp.PULP_CBC_CMD(msg=False))
+
+        # 新しい解盤面が見つかったら
+        if pulp.LpStatus[status] == 'Optimal':
+            solutionCount += 1
+            solution = [[0 for _ in range(size)] for _ in range(size)]
+            for i in range(size):
+                for j in range(size):
+                    for k in range(1, size + 1):
+                        if pulp.value(isValueInCell[i][j][k]) == 1:
+                            solution[i][j] = k
+
+            # 解盤面を保存
+            solutions.append(solution)
+
+            # 111~999の連続した配列に情報を格納
+            for i in range(size):
+                for j in range(size):
+                    value = solution[i][j]
+                    occurrenceCount[i][j][value - 1] += 1
+
+            # 新しい解を除外する制約を作成
+            problem += pulp.lpSum([isValueInCell[i][j][solution[i][j]] for i in range(size) for j in range(size)]) <= (size * size) - 1
+
+            print(f"\n解 {solutionCount} が見つかりました")
+            # printBoard(solution)
+        else:
+            print("全ての解盤面を生成しました。")
+            break
+
+    print(f"生成された解の数: {solutionCount}")
+    numberOfGeneratedBoards.append(solutionCount)
+
+    while True:  # occurrenceCountに値が1の要素があるか確認
+        foundUnique = False
         for i in range(size):
             for j in range(size):
-                if board[i][j] != 0:
-                    problem += isValueInCell[i][j][board[i][j]] == 1
+                for k in range(size):
+                    if occurrenceCount[i][j][k] == 1:  # 値が1の要素が見つかった
+                        foundUnique = True
+                        unique_cell = (i, j)
+                        unique_value = k + 1  # インデックスが0から始まるので+1
+                        break
+                if foundUnique:
+                    break
+            if foundUnique:
+                break
 
-        # 内部ループ
-        while solution_count < max_solutions:
-            current_time = time.time()
-            if current_time - start_time > 1800:  # 30分（1800秒）を超えた場合
-                print("30分を超えたため処理を終了します。")
-                return None, numberOfHintsAdded, numberOfGeneratedBoards  # numberOfGeneratedBoardsも返す
+        if foundUnique:  # 値を確定させて唯一解処理終了
+            i, j = unique_cell
+            board[i][j] = unique_value
+            numberOfHintsAdded += 1
 
-            # 問題を解く. ()の中はソルバーの出力off設定
-            status = problem.solve(pulp.PULP_CBC_CMD(msg=False))
+            print(f"マス ({i + 1}, {j + 1}) に値 {unique_value} を追加しました。")
+            print("唯一解が見つかりました。")
+            print(f"追加したヒントの数: {numberOfHintsAdded}")
+            print("最終的な盤面:")
+            printBoard(board)
+            return board, numberOfHintsAdded, numberOfGeneratedBoards
+        else:  # 配列の中で1以上かつ最小の値を確定
+            minCount = float('inf')
+            minCell = None
+            minValue = None
+            for i in range(size):
+                for j in range(size):
+                    if board[i][j] == 0:  # 既にヒントとして確定していないセルのみ
+                        for k in range(size):
+                            count = occurrenceCount[i][j][k]
+                            if 0 < count < minCount:
+                                minCount = count
+                                minCell = (i, j)
+                                minValue = k + 1  # インデックス調整
 
-            # 新しい解盤面が見つかったら
-            if pulp.LpStatus[status] == 'Optimal':
-                solution_count += 1
-                solution = [[0 for _ in range(size)] for _ in range(size)]
-                for i in range(size):
-                    for j in range(size):
-                        for k in range(1, size + 1):
-                            if pulp.value(isValueInCell[i][j][k]) == 1:
-                                solution[i][j] = k
+            if minCell is None:
+                print("エラー: 最小出現回数のセルが見つかりませんでした。")
+                return None, numberOfHintsAdded, numberOfGeneratedBoards
 
-                # 111~999の連続した配列に情報を格納
+            # 確定したマスから残りの可能性の盤面のみ抜き出す
+            i, j = minCell
+            board[i][j] = minValue
+            numberOfHintsAdded += 1
+
+            print(f"マス ({i + 1}, {j + 1}) に値 {minValue} を追加しました。")
+            print(f"現在のヒント数: {numberOfHintsAdded}")
+
+            # 追加したヒントに一致する解盤面のみを残す
+            remainingSolutions = []
+            for solution in solutions:
+                if solution[i][j] == minValue:
+                    remainingSolutions.append(solution)
+
+            # 残った解盤面がない場合、エラー
+            if not remainingSolutions:
+                print("エラー: 残った解盤面がありません。")
+                return None, numberOfHintsAdded, numberOfGeneratedBoards
+
+            # 残った解盤面からoccurrenceCountを再計算
+            occurrenceCount = [
+                [[0 for _ in range(size)] for _ in range(size)] for _ in range(size)]
+            for solution in remainingSolutions:
                 for i in range(size):
                     for j in range(size):
                         value = solution[i][j]
-                        occurrence_count[i][j][value - 1] += 1
+                        occurrenceCount[i][j][value - 1] += 1
 
-                # 新しい解を除外する制約を作成
-                new_constraint = pulp.LpAffineExpression(
-                    [(isValueInCell[i][j][solution[i][j]], 1)
-                     for i in range(size) for j in range(size)]
-                )
+            # solutionsリストを更新
+            solutions = remainingSolutions
 
-                # 新しい制約を問題に追加
-                max_matching_cells = size * size - 1  # 全マス数から1を引いた値
-                problem += new_constraint <= max_matching_cells
+            # 生成された解の数を更新
+            solutionCount = len(solutions)
+            numberOfGeneratedBoards.append(solutionCount)
 
-                print(f"\n解 {solution_count} が見つかりました")
-                # printBoard(solution)
-            else:
-                print("全ての解盤面を生成しました．")
-                break
+            print(f"残りの解の数: {solutionCount}")
 
-        print(f"生成された解の数: {solution_count}")
-
-        # 内部ループで生成された解の数を保存
-        numberOfGeneratedBoards.append(solution_count)
-
-        # 解盤面が一つしか見つからなかった(唯一解が確定)
-        if solution_count == 1:
-            print("唯一解が見つかりました。")
-            print(f"追加したヒントの数: {numberOfHintsAdded}")
-            return board, numberOfHintsAdded, numberOfGeneratedBoards
-        
-        # 最小出現回数のマスを見つける
-        min_count = float('inf')
-        min_pos = None
-        min_value = None
-        for i in range(size):
-            for j in range(size):
-                if board[i][j] == 0:  # 空のマスのみを対象とする
-                    for k in range(size):
-                        if 0 < occurrence_count[i][j][k] < min_count:
-                            min_count = occurrence_count[i][j][k]
-                            min_pos = (i, j)
-                            min_value = k + 1
-
-        if min_pos is None:
-            print("エラー: 最小出現回数のマスが見つかりませんでした。")
-            return None, numberOfHintsAdded, numberOfGeneratedBoards
-
-        # 最小出現回数のマスを盤面に追加
-        i, j = min_pos
-        board[i][j] = min_value
-        numberOfHintsAdded += 1  # ヒントを追加したのでカウントを増やす
-        print(f"マス ({i + 1}, {j + 1}) に {min_value} を追加しました。")
-        print(f"現在追加したヒントの数: {numberOfHintsAdded}")
-
-        # 盤面の表示
-        print("現在の盤面:")
-        printBoard(board)
-
-    # While ループが正常に終了した場合（通常はここには到達しない）
-    return None, numberOfHintsAdded, numberOfGeneratedBoards
+        # 時間制限のチェック
+        currentTime = time.time()
+        if currentTime - startTime > 1800:  # 30分（1800秒）を超えた場合
+            print("30分を超えたため処理を終了します。")
+            return None, numberOfHintsAdded, numberOfGeneratedBoards  # numberOfGeneratedBoardsも返す

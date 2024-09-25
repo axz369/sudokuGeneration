@@ -16,11 +16,11 @@ if __name__ == "__main__":
     #########################################################
     # プログラム設定
     INPUT_FILE = 'input9.json'
-    INPUT_KEY = 'input1'
+    INPUT_KEY = 'input12'
 
     if '9' in INPUT_FILE:
-        MAX_SOLUTIONS = 100
-        TARGET_HINT_COUNT = 27
+        MAX_SOLUTIONS = 30
+        TARGET_HINT_COUNT = 10
     elif '16' in INPUT_FILE:
         MAX_SOLUTIONS = 200
         TARGET_HINT_COUNT = 140
