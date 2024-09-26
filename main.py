@@ -19,8 +19,8 @@ if __name__ == "__main__":
     INPUT_KEY = 'input12'
 
     if '9' in INPUT_FILE:
-        MAX_SOLUTIONS = 30
-        TARGET_HINT_COUNT = 10
+        MAX_SOLUTIONS = 100
+        TARGET_HINT_COUNT = 28
     elif '16' in INPUT_FILE:
         MAX_SOLUTIONS = 200
         TARGET_HINT_COUNT = 140

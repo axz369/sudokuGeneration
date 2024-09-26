@@ -1,5 +1,6 @@
 import time
 import pulp
+import random  # ランダムな選択のために追加
 
 from utility.printBoard import printBoard
 
@@ -120,18 +121,56 @@ def generateUniqueSolution(board, maxSolutions):
             if foundUnique:
                 break
 
-        if foundUnique:  # 値を確定させて唯一解処理終了
+        if foundUnique:
+            # 値を確定させる
             i, j = unique_cell
             board[i][j] = unique_value
             numberOfHintsAdded += 1
 
             print(f"マス ({i + 1}, {j + 1}) に値 {unique_value} を追加しました。")
-            print("唯一解が見つかりました。")
-            print(f"追加したヒントの数: {numberOfHintsAdded}")
-            print("最終的な盤面:")
-            printBoard(board)
-            return board, numberOfHintsAdded, numberOfGeneratedBoards
-        else:  # 配列の中で1以上かつ最小の値を確定
+
+            # 対応する解盤面を取得
+            for solution in solutions:
+                if solution[i][j] == unique_value:
+                    currentSolution = solution
+                    break
+            else:
+                print("エラー: 対応する解盤面が見つかりませんでした。")
+                return None, numberOfHintsAdded, numberOfGeneratedBoards
+
+            # その解盤面からヒントを追加していく
+            while True:
+                # 現在のヒントで唯一解か確認
+                isUnique, foundSolution = checkUniqueSolution(board, size, currentSolution)
+
+                if isUnique:
+                    print("唯一解が見つかりました。")
+                    print(f"追加したヒントの数: {numberOfHintsAdded}")
+                    print("最終的な盤面:")
+                    printBoard(board)
+                    return board, numberOfHintsAdded, numberOfGeneratedBoards
+                else:
+                    # ヒントを追加する
+                    empty_positions = [(x, y) for x in range(size) for y in range(size) if board[x][y] == 0]
+                    if not empty_positions:
+                        print("エラー: ヒントを追加できるマスがありません。")
+                        return None, numberOfHintsAdded, numberOfGeneratedBoards
+
+                    # ランダムに位置を選択
+                    random.shuffle(empty_positions)
+                    x, y = empty_positions[0]
+
+                    board[x][y] = currentSolution[x][y]
+                    numberOfHintsAdded += 1
+                    print(f"マス ({x + 1}, {y + 1}) に値 {currentSolution[x][y]} を追加しました。")
+
+                # 時間制限のチェック
+                currentTime = time.time()
+                if currentTime - startTime > 1800:  # 30分（1800秒）を超えた場合
+                    print("30分を超えたため処理を終了します。")
+                    return None, numberOfHintsAdded, numberOfGeneratedBoards  # numberOfGeneratedBoardsも返す
+        else:
+            # 配列の中で1以上かつ最小の値を確定
             minCount = float('inf')
             minCell = None
             minValue = None
@@ -191,3 +230,79 @@ def generateUniqueSolution(board, maxSolutions):
         if currentTime - startTime > 1800:  # 30分（1800秒）を超えた場合
             print("30分を超えたため処理を終了します。")
             return None, numberOfHintsAdded, numberOfGeneratedBoards  # numberOfGeneratedBoardsも返す
+
+
+def checkUniqueSolution(board, size, currentSolution):
+    # 数独の制約問題を再定義
+    problem = pulp.LpProblem("SudokuCheck", pulp.LpMinimize)
+
+    # 決定変数の作成
+    isValueInCell = pulp.LpVariable.dicts("IsValueInCell",
+                                          (range(size), range(size),
+                                           range(1, size + 1)),
+                                          cat='Binary')
+
+    # 制約条件の追加（同じまま）
+    # 1. 各マスには1つの数字のみが入る
+    for i in range(size):
+        for j in range(size):
+            problem += pulp.lpSum([isValueInCell[i][j][k]
+                                   for k in range(1, size + 1)]) == 1
+
+    # 2. 各行には1から9の数字が1つずつ入る
+    for i in range(size):
+        for k in range(1, size + 1):
+            problem += pulp.lpSum([isValueInCell[i][j][k]
+                                   for j in range(size)]) == 1
+
+    # 3. 各列には1から9の数字が1つずつ入る
+    for j in range(size):
+        for k in range(1, size + 1):
+            problem += pulp.lpSum([isValueInCell[i][j][k]
+                                   for i in range(size)]) == 1
+
+    # 4. 各3x3ブロックには1から9の数字が1つずつ入る
+    blockSize = int(size ** 0.5)
+    for bi in range(blockSize):
+        for bj in range(blockSize):
+            for k in range(1, size + 1):
+                problem += pulp.lpSum([isValueInCell[i][j][k]
+                                       for i in range(bi * blockSize, (bi + 1) * blockSize)
+                                       for j in range(bj * blockSize, (bj + 1) * blockSize)]) == 1
+
+    # 現在のヒントの設定
+    for i in range(size):
+        for j in range(size):
+            if board[i][j] != 0:
+                problem += isValueInCell[i][j][board[i][j]] == 1
+
+    # 解の探索（最大2つまで）
+    solutions_found = 0
+    foundSolution = None
+    while solutions_found < 2:
+        status = problem.solve(pulp.PULP_CBC_CMD(msg=False))
+
+        if pulp.LpStatus[status] == 'Optimal':
+            solutions_found += 1
+            solution = [[0 for _ in range(size)] for _ in range(size)]
+            for i in range(size):
+                for j in range(size):
+                    for k in range(1, size + 1):
+                        if pulp.value(isValueInCell[i][j][k]) == 1:
+                            solution[i][j] = k
+
+            if foundSolution is None:
+                foundSolution = solution
+            else:
+                if solution != foundSolution:
+                    return False, None  # 複数の異なる解が見つかった
+
+            # 見つかった解を除外する制約を追加
+            problem += pulp.lpSum([isValueInCell[i][j][solution[i][j]] for i in range(size) for j in range(size)]) <= (size * size) - 1
+        else:
+            break
+
+    if solutions_found == 1 and foundSolution == currentSolution:
+        return True, foundSolution
+    else:
+        return False, None
