@@ -5,7 +5,7 @@ from modules.ConvertToNumber import ConvertToNumber
 from modules.Validation import Validation
 from modules.AddHintToLineSymmetry import AddHintToLineSymmetry
 from modules.UnifiedNumberOfHints import UnifiedNumberOfHints
-from modules.generateUniqueSolution import generateUniqueSolution
+from modules.generateUniqueSolution1 import generateUniqueSolution1
 from modules.generateUniqueSolution2 import generateUniqueSolution2  # 追加
 
 from utility.generateSolutionBoard import generateSolutionBoard
@@ -20,7 +20,7 @@ if __name__ == "__main__":
     INPUT_KEY = 'input1'
 
     # アルゴリズムの選択 (1: generateUniqueSolution, 2: generateUniqueSolution2)
-    ALGORITHM_CHOICE = 2
+    ALGORITHM_CHOICE = 1
 
     if '9' in INPUT_FILE:
         MAX_SOLUTIONS = 30
@@ -129,7 +129,7 @@ if __name__ == "__main__":
     # 唯一解の生成
     startTime = time.time()
     if ALGORITHM_CHOICE == 1:
-        uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolution(
+        uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolution1(
             selectedBoard, MAX_SOLUTIONS)
     elif ALGORITHM_CHOICE == 2:
         uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolution2(

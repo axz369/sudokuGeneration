@@ -5,7 +5,7 @@ import random  # ランダムな選択のために追加
 from utility.printBoard import printBoard
 
 
-def generateUniqueSolution(board, maxSolutions):
+def generateUniqueSolution1(board, maxSolutions):
     startTime = time.time()
     numberOfHintsAdded = 0  # 追加したヒントの数をカウントする変数
     numberOfGeneratedBoards = []  # 生成された解の数を保存するリスト
