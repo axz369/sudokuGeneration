@@ -6,6 +6,7 @@ from modules.Validation import Validation
 from modules.AddHintToLineSymmetry import AddHintToLineSymmetry
 from modules.UnifiedNumberOfHints import UnifiedNumberOfHints
 from modules.generateUniqueSolution import generateUniqueSolution
+from modules.generateUniqueSolution2 import generateUniqueSolution2  # 追加
 
 from utility.generateSolutionBoard import generateSolutionBoard
 from utility.printBoard import printBoard
@@ -16,11 +17,14 @@ if __name__ == "__main__":
     #########################################################
     # プログラム設定
     INPUT_FILE = 'input9.json'
-    INPUT_KEY = 'input12'
+    INPUT_KEY = 'input1'
+
+    # アルゴリズムの選択 (1: generateUniqueSolution, 2: generateUniqueSolution2)
+    ALGORITHM_CHOICE = 2
 
     if '9' in INPUT_FILE:
-        MAX_SOLUTIONS = 100
-        TARGET_HINT_COUNT = 28
+        MAX_SOLUTIONS = 30
+        TARGET_HINT_COUNT = 27
     elif '16' in INPUT_FILE:
         MAX_SOLUTIONS = 200
         TARGET_HINT_COUNT = 140
@@ -124,8 +128,15 @@ if __name__ == "__main__":
 
     # 唯一解の生成
     startTime = time.time()
-    uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolution(
-        selectedBoard, MAX_SOLUTIONS)
+    if ALGORITHM_CHOICE == 1:
+        uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolution(
+            selectedBoard, MAX_SOLUTIONS)
+    elif ALGORITHM_CHOICE == 2:
+        uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolution2(
+            selectedBoard, MAX_SOLUTIONS)
+    else:
+        print("無効なアルゴリズム選択です。1または2を選択してください。")
+        exit(1)
     endTime = time.time()
 
     if uniqueSolution:
