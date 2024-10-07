@@ -6,7 +6,7 @@ from modules.Validation import Validation
 from modules.AddHintToLineSymmetry import AddHintToLineSymmetry
 from modules.UnifiedNumberOfHints import UnifiedNumberOfHints
 from modules.generateUniqueSolution1 import generateUniqueSolution1
-from modules.generateUniqueSolution2 import generateUniqueSolution2  # 追加
+from modules.generateUniqueSolution2 import generateUniqueSolution2
 
 from utility.generateSolutionBoard import generateSolutionBoard
 from utility.printBoard import printBoard
