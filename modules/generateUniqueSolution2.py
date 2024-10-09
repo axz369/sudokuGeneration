@@ -2,9 +2,6 @@ import time
 import pulp
 import random
 
-from utility.printBoard import printBoard  # 必要に応じて
-
-
 def generateUniqueSolution2(board, maxSolutions):
     startTime = time.time()
     numberOfHintsAdded = 0  # 追加したヒントの数をカウントする変数
@@ -27,7 +24,7 @@ def generateUniqueSolution2(board, maxSolutions):
         currentTime = time.time()
         if currentTime - startTime > 1800:  # 30分を超えた場合
             print("30分を超えたため処理を終了します。")
-            return None, numberOfHintsAdded, numberOfGeneratedBoards
+            return None, None, numberOfHintsAdded, numberOfGeneratedBoards
 
         solutions = []  # 生成された解を保存するリストをリセット
         problem, isValueInCell = defineSudokuProblem(board, size)  # 問題を再定義
@@ -62,14 +59,18 @@ def generateUniqueSolution2(board, maxSolutions):
         # ステップ⑤ 生成できたのが1盤面だけ？
         if len(solutions) == 1:
             print("唯一解が見つかりました。")
-            board = solutions[0]
-            print(f"追加したヒントの数: {numberOfHintsAdded}")
-            print("最終的な盤面:")
-            printBoard(board)
-            return board, numberOfHintsAdded, numberOfGeneratedBoards
+            unique_solution = solutions[0]  # 解盤面を保存
+
+            # 問題盤面（ヒント付きの盤面）をコピーして返す
+            problem_board = [row[:] for row in board]
+
+            return problem_board, unique_solution, numberOfHintsAdded, numberOfGeneratedBoards
         elif len(solutions) == 0:
             print("エラー: 解が存在しません。追加したヒントを元に戻します。")
             # 最後に追加したヒントを取り消す
+            if numberOfHintsAdded == 0:
+                print("これ以上ヒントを取り消せません。唯一解の生成に失敗しました。")
+                return None, None, numberOfHintsAdded, numberOfGeneratedBoards
             i, j = lastHintPosition
             board[i][j] = 0
             numberOfHintsAdded -= 1
@@ -84,7 +85,7 @@ def generateUniqueSolution2(board, maxSolutions):
                 occurrenceCount, board, size)
             if minCell is None:
                 print("エラー: 最小出現回数のセルが見つかりませんでした。")
-                return None, numberOfHintsAdded, numberOfGeneratedBoards
+                return None, None, numberOfHintsAdded, numberOfGeneratedBoards
 
             i, j = minCell
             board[i][j] = minValue
@@ -129,13 +130,13 @@ def generateUniqueSolution2(board, maxSolutions):
             currentTime = time.time()
             if currentTime - startTime > 1800:  # 30分を超えた場合
                 print("30分を超えたため処理を終了します。")
-                return None, numberOfHintsAdded, numberOfGeneratedBoards
+                return None, None, numberOfHintsAdded, numberOfGeneratedBoards
 
             # 再度解を生成するためにループの最初に戻る
             continue
 
     # 万が一ここに到達した場合
-    return None, numberOfHintsAdded, numberOfGeneratedBoards
+    return None, None, numberOfHintsAdded, numberOfGeneratedBoards
 
 
 def defineSudokuProblem(board, size):
@@ -154,19 +155,19 @@ def defineSudokuProblem(board, size):
             problem += pulp.lpSum([isValueInCell[i][j][k]
                                    for k in range(1, size + 1)]) == 1
 
-    # 2. 各行には1から9の数字が1つずつ入る
+    # 2. 各行には1からサイズの数字が1つずつ入る
     for i in range(size):
         for k in range(1, size + 1):
             problem += pulp.lpSum([isValueInCell[i][j][k]
                                    for j in range(size)]) == 1
 
-    # 3. 各列には1から9の数字が1つずつ入る
+    # 3. 各列には1からサイズの数字が1つずつ入る
     for j in range(size):
         for k in range(1, size + 1):
             problem += pulp.lpSum([isValueInCell[i][j][k]
                                    for i in range(size)]) == 1
 
-    # 4. 各ブロックには1から9の数字が1つずつ入る
+    # 4. 各ブロックには1からサイズの数字が1つずつ入る
     blockSize = int(size ** 0.5)
     for bi in range(blockSize):
         for bj in range(blockSize):

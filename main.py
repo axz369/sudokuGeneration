@@ -19,7 +19,7 @@ if __name__ == "__main__":
     INPUT_FILE = 'input9.json'
     INPUT_KEY = 'input1'
 
-    # アルゴリズムの選択 (1: generateUniqueSolution, 2: generateUniqueSolution2)
+    # アルゴリズムの選択 (1: generateUniqueSolution1, 2: generateUniqueSolution2)
     ALGORITHM_CHOICE = 2
 
     if '9' in INPUT_FILE:
@@ -132,7 +132,7 @@ if __name__ == "__main__":
         uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolution1(
             selectedBoard, MAX_SOLUTIONS)
     elif ALGORITHM_CHOICE == 2:
-        uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolution2(
+        problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolution2(
             selectedBoard, MAX_SOLUTIONS)
     else:
         print("無効なアルゴリズム選択です。1または2を選択してください。")
@@ -143,13 +143,24 @@ if __name__ == "__main__":
         print("\n******************************************")
         print("唯一解を持つ問題例(数字):")
         print("******************************************")
+        printBoard(problemExample)
+
+        print("\n******************************************")
+        print("その問題例の解答(数字):")
+        print("******************************************")
         printBoard(uniqueSolution)
 
         # 数値から文字に変換して表示
         print("\n******************************************")
         print("文字に変換された問題例(文字):")
         print("******************************************")
+        printBoard(converter.convertBack(problemExample))
+
+        print("\n******************************************")
+        print("文字に変換された解答(文字):")
+        print("******************************************")
         printBoard(converter.convertBack(uniqueSolution))
+
     else:
         print("唯一解の生成に失敗しました。")
 
