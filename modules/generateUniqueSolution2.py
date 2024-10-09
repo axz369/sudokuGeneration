@@ -1,5 +1,6 @@
 import time
 import pulp
+import random
 
 from utility.printBoard import printBoard  # 必要に応じて
 
@@ -15,10 +16,6 @@ def generateUniqueSolution2(board, maxSolutions):
     # 解盤面を保存するリスト
     solutions = []
 
-    # 投票配列の初期化
-    occurrenceCount = [
-        [[0 for _ in range(size)] for _ in range(size)] for _ in range(size)]
-
     # 数独の制約問題を関数を使って定義
     problem, isValueInCell = defineSudokuProblem(board, size)
 
@@ -33,6 +30,7 @@ def generateUniqueSolution2(board, maxSolutions):
             return None, numberOfHintsAdded, numberOfGeneratedBoards
 
         solutions = []  # 生成された解を保存するリストをリセット
+        problem, isValueInCell = defineSudokuProblem(board, size)  # 問題を再定義
         excluded_solutions_constraints = []  # 除外制約もリセット
 
         while len(solutions) < maxSolutions:
@@ -70,8 +68,13 @@ def generateUniqueSolution2(board, maxSolutions):
             printBoard(board)
             return board, numberOfHintsAdded, numberOfGeneratedBoards
         elif len(solutions) == 0:
-            print("エラー: 解が存在しません。")
-            return None, numberOfHintsAdded, numberOfGeneratedBoards
+            print("エラー: 解が存在しません。追加したヒントを元に戻します。")
+            # 最後に追加したヒントを取り消す
+            i, j = lastHintPosition
+            board[i][j] = 0
+            numberOfHintsAdded -= 1
+            # ヒントを戻した後、再度解を探索
+            continue
         else:
             # ステップ⑥ 投票配列に格納
             occurrenceCount = calculateOccurrenceCount(solutions, size)
@@ -85,13 +88,14 @@ def generateUniqueSolution2(board, maxSolutions):
 
             i, j = minCell
             board[i][j] = minValue
+            lastHintPosition = (i, j)  # 最後に追加したヒントの位置を記録
             numberOfHintsAdded += 1
             print(f"マス ({i + 1}, {j + 1}) に値 {minValue} を追加しました。")
 
             # 投票配列と制約をリセット
             occurrenceCount = [
                 [[0 for _ in range(size)] for _ in range(size)] for _ in range(size)]
-            problem, isValueInCell = defineSudokuProblem(board, size)
+            # problem, isValueInCell = defineSudokuProblem(board, size)
             # 除外制約もリセット（新たに解を生成するため）
 
             # 最小の値が2以上か確認
@@ -101,8 +105,11 @@ def generateUniqueSolution2(board, maxSolutions):
                 print(f"ヒントを追加した後の残りの解の数: {len(solutions)}")
 
                 if len(solutions) == 0:
-                    print("エラー: 残った解盤面がありません。")
-                    return None, numberOfHintsAdded, numberOfGeneratedBoards
+                    print("エラー: フィルタリング後に解が存在しません。")
+                    # ヒントを取り消す
+                    board[i][j] = 0
+                    numberOfHintsAdded -= 1
+                    continue  # 再度ループの最初から
 
                 # 投票配列へ格納して制約を追加
                 occurrenceCount = calculateOccurrenceCount(solutions, size)
@@ -203,8 +210,7 @@ def calculateOccurrenceCount(solutions, size):
 # 投票配列の最小位置と最小値を特定
 def findMinOccurrence(occurrenceCount, board, size):
     minCount = float('inf')
-    minCell = None
-    minValue = None
+    minCells = []
     for i in range(size):
         for j in range(size):
             if board[i][j] == 0:  # 空のセルのみ
@@ -212,9 +218,15 @@ def findMinOccurrence(occurrenceCount, board, size):
                     count = occurrenceCount[i][j][k]
                     if 0 < count < minCount:
                         minCount = count
-                        minCell = (i, j)
-                        minValue = k + 1  # インデックス調整
-    return minCount, minCell, minValue
+                        minCells = [(i, j, k + 1)]
+                    elif count == minCount:
+                        minCells.append((i, j, k + 1))
+    if minCells:
+        # ランダムに一つ選択
+        i, j, minValue = random.choice(minCells)
+        return minCount, (i, j), minValue
+    else:
+        return None, None, None
 
 
 # 解盤面から現在のヒントと矛盾しない解盤面だけを残すフィルタリング
