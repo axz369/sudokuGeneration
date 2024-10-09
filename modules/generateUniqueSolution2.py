@@ -1,6 +1,5 @@
 import time
 import pulp
-import random  # ランダムな選択のために追加
 
 from utility.printBoard import printBoard  # 必要に応じて
 
@@ -12,7 +11,6 @@ def generateUniqueSolution2(board, maxSolutions):
 
     print("唯一解生成開始")
     size = len(board)
-    maxSolutions = maxSolutions  # 生成する解の最大数
 
     # 解盤面を保存するリスト
     solutions = []
@@ -21,49 +19,48 @@ def generateUniqueSolution2(board, maxSolutions):
     occurrenceCount = [
         [[0 for _ in range(size)] for _ in range(size)] for _ in range(size)]
 
-    # 数独の制約問題を定義
+    # 数独の制約問題を関数を使って定義
     problem, isValueInCell = defineSudokuProblem(board, size)
 
     # 除外した解の制約を保持するリスト
     excluded_solutions_constraints = []
 
     while True:
-        # ステップ① 解盤面を一つ生成
+        # ステップ① 解盤面を最大 maxSolutions 個生成
         currentTime = time.time()
         if currentTime - startTime > 1800:  # 30分を超えた場合
             print("30分を超えたため処理を終了します。")
             return None, numberOfHintsAdded, numberOfGeneratedBoards
 
-        # 問題を解く
-        status = problem.solve(pulp.PULP_CBC_CMD(msg=False))
+        solutions = []  # 生成された解を保存するリストをリセット
+        excluded_solutions_constraints = []  # 除外制約もリセット
 
-        if pulp.LpStatus[status] == 'Optimal':
-            # ステップ② 解盤面の情報を配列に保存
-            solution = extractSolution(isValueInCell, size)
-            solutions.append(solution)
+        while len(solutions) < maxSolutions:
+            # 問題を解く
+            status = problem.solve(pulp.PULP_CBC_CMD(msg=False))
 
-            # ステップ③ 解盤面の除外の制約を追加
-            exclude_constraint = pulp.lpSum([isValueInCell[i][j][solution[i][j]] for i in range(size)
-                                             for j in range(size)]) <= (size * size) - 1
-            problem += exclude_constraint
-            excluded_solutions_constraints.append(exclude_constraint)
+            if pulp.LpStatus[status] == 'Optimal':
+                # ステップ② 解盤面の情報を配列に保存
+                solution = extractSolution(isValueInCell, size)
+                solutions.append(solution)
 
-            print(f"\n解が見つかりました。現在の解の数: {len(solutions)}")
+                # ステップ③ 解盤面の除外の制約を追加
+                exclude_constraint = pulp.lpSum([isValueInCell[i][j][solution[i][j]] for i in range(size)
+                                                 for j in range(size)]) <= (size * size) - 1
+                problem += exclude_constraint
+                excluded_solutions_constraints.append(exclude_constraint)
 
-            # ステップ④ 上限まで生成した or すべて出し切った
-            if len(solutions) >= maxSolutions:
-                numberOfGeneratedBoards.append(len(solutions))
-                print(f"生成された解の数: {len(solutions)}")
-                break  # ループを終了
+                # 進捗の表示
+                print(f"\n解が見つかりました。現在の解の数: {len(solutions)}")
+
+                continue  # 解の上限に達するまで繰り返す
             else:
-                continue  # ステップ①へ戻る
-        else:
-            print("全ての解盤面を生成しました。")
-            numberOfGeneratedBoards.append(len(solutions))
-            print(f"生成された解の数: {len(solutions)}")
-            break  # ループを終了
+                print("全ての解盤面を生成しました。")
+                break  # 解が見つからなくなったらループを終了
 
-    while True:
+        numberOfGeneratedBoards.append(len(solutions))
+        print(f"生成された解の数: {len(solutions)}")
+
         # ステップ⑤ 生成できたのが1盤面だけ？
         if len(solutions) == 1:
             print("唯一解が見つかりました。")
@@ -91,18 +88,15 @@ def generateUniqueSolution2(board, maxSolutions):
             numberOfHintsAdded += 1
             print(f"マス ({i + 1}, {j + 1}) に値 {minValue} を追加しました。")
 
-            # ステップ⑧ 投票配列と今までの制約をリセット
+            # 投票配列と制約をリセット
             occurrenceCount = [
                 [[0 for _ in range(size)] for _ in range(size)] for _ in range(size)]
             problem, isValueInCell = defineSudokuProblem(board, size)
+            # 除外制約もリセット（新たに解を生成するため）
 
-            # 除外した解の制約を再度追加
-            for constraint in excluded_solutions_constraints:
-                problem += constraint
-
-            # ステップ⑨ 最小の値が2以上か確認
+            # 最小の値が2以上か確認
             if minCount >= 2:
-                # ステップ⑩ 最小のヒント位置に当てはまる盤面を探して、その盤面のみの解盤面配列を作成
+                # ステップ⑩ フィルタリング処理を行う
                 solutions = filterSolutionsByHint(solutions, i, j, minValue)
                 print(f"ヒントを追加した後の残りの解の数: {len(solutions)}")
 
@@ -110,12 +104,19 @@ def generateUniqueSolution2(board, maxSolutions):
                     print("エラー: 残った解盤面がありません。")
                     return None, numberOfHintsAdded, numberOfGeneratedBoards
 
-                # ステップ⑪ 投票配列へ格納して制約を追加。その後①の処理へ
+                # 投票配列へ格納して制約を追加
                 occurrenceCount = calculateOccurrenceCount(solutions, size)
                 problem += isValueInCell[i][j][minValue] == 1
+                # 除外した解の制約を再度追加
+                for solution in solutions:
+                    exclude_constraint = pulp.lpSum([isValueInCell[i][j][solution[i][j]] for i in range(size)
+                                                     for j in range(size)]) <= (size * size) - 1
+                    problem += exclude_constraint
+                    excluded_solutions_constraints.append(exclude_constraint)
             else:
-                # 最小の値が1の場合は、そのまま
-                pass
+                print("最小の値が1")
+                # ステップ①へ戻る（解盤面と制約をリセットして再度解を生成）
+                continue
 
             # 時間制限のチェック
             currentTime = time.time()
@@ -124,8 +125,6 @@ def generateUniqueSolution2(board, maxSolutions):
                 return None, numberOfHintsAdded, numberOfGeneratedBoards
 
             # 再度解を生成するためにループの最初に戻る
-            # 解盤面リストをクリア
-            solutions = []
             continue
 
     # 万が一ここに到達した場合
@@ -178,6 +177,7 @@ def defineSudokuProblem(board, size):
     return problem, isValueInCell
 
 
+# ステップ② 解盤面の情報を配列に保存
 def extractSolution(isValueInCell, size):
     solution = [[0 for _ in range(size)] for _ in range(size)]
     for i in range(size):
@@ -200,6 +200,7 @@ def calculateOccurrenceCount(solutions, size):
     return occurrenceCount
 
 
+# 投票配列の最小位置と最小値を特定
 def findMinOccurrence(occurrenceCount, board, size):
     minCount = float('inf')
     minCell = None
@@ -216,6 +217,7 @@ def findMinOccurrence(occurrenceCount, board, size):
     return minCount, minCell, minValue
 
 
+# 解盤面から現在のヒントと矛盾しない解盤面だけを残すフィルタリング
 def filterSolutionsByHint(solutions, i, j, minValue):
     filteredSolutions = []
     for solution in solutions:

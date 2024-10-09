@@ -20,10 +20,10 @@ if __name__ == "__main__":
     INPUT_KEY = 'input1'
 
     # アルゴリズムの選択 (1: generateUniqueSolution, 2: generateUniqueSolution2)
-    ALGORITHM_CHOICE = 1
+    ALGORITHM_CHOICE = 2
 
     if '9' in INPUT_FILE:
-        MAX_SOLUTIONS = 30
+        MAX_SOLUTIONS = 40
         TARGET_HINT_COUNT = 27
     elif '16' in INPUT_FILE:
         MAX_SOLUTIONS = 200
