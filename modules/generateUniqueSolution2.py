@@ -2,6 +2,7 @@ import time
 import pulp
 import random
 
+
 from utility.printBoard import printBoard  # 必要に応じて
 
 
