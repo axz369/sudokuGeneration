@@ -2,6 +2,9 @@ import time
 import pulp
 import random
 
+from utility.printBoard import printBoard  # 必要に応じて
+
+
 def generateUniqueSolution2(board, maxSolutions):
     startTime = time.time()
     numberOfHintsAdded = 0  # 追加したヒントの数をカウントする変数
@@ -46,7 +49,7 @@ def generateUniqueSolution2(board, maxSolutions):
                 excluded_solutions_constraints.append(exclude_constraint)
 
                 # 進捗の表示
-                print(f"\n解が見つかりました。現在の解の数: {len(solutions)}")
+                print(f"現在の解の数: {len(solutions)}")
 
                 continue  # 解の上限に達するまで繰り返す
             else:
@@ -99,7 +102,7 @@ def generateUniqueSolution2(board, maxSolutions):
             # problem, isValueInCell = defineSudokuProblem(board, size)
             # 除外制約もリセット（新たに解を生成するため）
 
-            # 最小の値が2以上か確認
+            # ステップ⑨ 最小の値が2以上か確認
             if minCount >= 2:
                 # ステップ⑩ フィルタリング処理を行う
                 solutions = filterSolutionsByHint(solutions, i, j, minValue)
@@ -111,6 +114,12 @@ def generateUniqueSolution2(board, maxSolutions):
                     board[i][j] = 0
                     numberOfHintsAdded -= 1
                     continue  # 再度ループの最初から
+
+                # フィルタリング後の解盤面を表示（ここが追加されたコードです）
+                print("フィルタリング後の解盤面:")
+                for idx, solution in enumerate(solutions):
+                    print(f"解 {idx + 1}:")
+                    printBoard(solution)
 
                 # 投票配列へ格納して制約を追加
                 occurrenceCount = calculateOccurrenceCount(solutions, size)

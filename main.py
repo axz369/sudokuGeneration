@@ -23,8 +23,8 @@ if __name__ == "__main__":
     ALGORITHM_CHOICE = 2
 
     if '9' in INPUT_FILE:
-        MAX_SOLUTIONS = 40
-        TARGET_HINT_COUNT = 27
+        MAX_SOLUTIONS = 100
+        TARGET_HINT_COUNT = 25
     elif '16' in INPUT_FILE:
         MAX_SOLUTIONS = 200
         TARGET_HINT_COUNT = 140
