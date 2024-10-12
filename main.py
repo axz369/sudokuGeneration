@@ -17,13 +17,13 @@ if __name__ == "__main__":
     #########################################################
     # プログラム設定
     INPUT_FILE = 'input9.json'
-    INPUT_KEY = 'input4'
+    INPUT_KEY = 'input6'
 
     # アルゴリズムの選択 (1: generateUniqueSolution1, 2: generateUniqueSolution2)
     ALGORITHM_CHOICE = 2
 
     if '9' in INPUT_FILE:
-        MAX_SOLUTIONS = 300
+        MAX_SOLUTIONS = 600
         TARGET_HINT_COUNT = 25
     elif '16' in INPUT_FILE:
         MAX_SOLUTIONS = 200

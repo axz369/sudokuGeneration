@@ -14,12 +14,12 @@ def generateUniqueSolution2(board, maxSolutions):
     size = len(board)
 
     while True:
-        # ステップ① 解盤面を最大 maxSolutions 個生成
         currentTime = time.time()
         if currentTime - startTime > 1800:  # 30 分を超えた場合
             print("30 分を超えたため処理を終了します。")
             return None, None, numberOfHintsAdded, numberOfGeneratedBoards
 
+        # ステップ① 解盤面を最大 maxSolutions 個生成
         # 問題を再定義
         problem, isValueInCell = defineSudokuProblem(board, size)
 
@@ -67,7 +67,7 @@ def generateUniqueSolution2(board, maxSolutions):
             numberOfHintsAdded -= 1
             # ヒントを戻した後、再度解を探索
             continue
-        else:
+        else:  # 生成できた盤面が2以上(次回ループで再利用する盤面がある)
             # ステップ⑥ 投票配列に格納
             occurrenceCount = calculateOccurrenceCount(solutions, size)
 
@@ -84,13 +84,11 @@ def generateUniqueSolution2(board, maxSolutions):
             numberOfHintsAdded += 1
             print(f"マス ({i + 1}, {j + 1}) に値 {minValue} を追加しました。")
 
-            # 時間制限のチェック
-            currentTime = time.time()
-            if currentTime - startTime > 1800:  # 30 分を超えた場合
-                print("30 分を超えたため処理を終了します。")
-                return None, None, numberOfHintsAdded, numberOfGeneratedBoards
+            # ステップ⑧ 投票配列と今までの制約をリセット
+            occurrenceCount = None  # 投票配列をリセット
+            problem = None  # 問題をリセット
 
-            # 最小の値が 2 以上か確認
+            # ステップ⑨ 最小の値が 2 以上か確認
             if minCount >= 2:
                 # ステップ⑩ フィルタリング処理を行う
                 solutions = filterSolutionsByHint(solutions, i, j, minValue)
