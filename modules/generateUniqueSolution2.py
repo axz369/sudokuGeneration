@@ -39,7 +39,7 @@ def generateUniqueSolution2(board, maxSolutions):
                 problem += exclude_constraint
 
                 # 進捗の表示
-                print(f"\n解が見つかりました。現在の解の数: {len(solutions)}")
+                print(f"現在の解の数: {len(solutions)}")
             else:
                 print("全ての解盤面を生成しました。")
                 break  # 解が見つからなくなったらループを終了
@@ -92,7 +92,7 @@ def generateUniqueSolution2(board, maxSolutions):
 
             # 最小の値が 2 以上か確認
             if minCount >= 2:
-                # ステップ⑩ フィルタリング処理を行う(先ほどのヒント追加をした状態で当てはまる，再利用できる盤面の抜き出し)
+                # ステップ⑩ フィルタリング処理を行う
                 solutions = filterSolutionsByHint(solutions, i, j, minValue)
                 print(f"ヒントを追加した後の残りの解の数: {len(solutions)}")
 
@@ -111,10 +111,16 @@ def generateUniqueSolution2(board, maxSolutions):
 
                 # 問題を再定義し、フィルタリング後の解を除外する制約を追加
                 problem, isValueInCell = defineSudokuProblem(board, size)
+                constraint_counter = 1  # 制約式の番号カウンター
                 for solution in solutions:
                     exclude_constraint = pulp.lpSum([isValueInCell[i][j][solution[i][j]] for i in range(size)
                                                      for j in range(size)]) <= (size * size) - 1
                     problem += exclude_constraint
+
+                    # 制約式の表示
+                    print(f"{constraint_counter}つ目の制約式:")
+                    print(exclude_constraint)
+                    constraint_counter += 1
 
                 continue  # ステップ①へ戻る
             else:
