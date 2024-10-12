@@ -2,7 +2,6 @@ import time
 import pulp
 import random
 
-
 from utility.printBoard import printBoard  # 必要に応じて
 
 
@@ -93,7 +92,7 @@ def generateUniqueSolution2(board, maxSolutions):
 
             # 最小の値が 2 以上か確認
             if minCount >= 2:
-                # ステップ⑩ フィルタリング処理を行う
+                # ステップ⑩ フィルタリング処理を行う(先ほどのヒント追加をした状態で当てはまる，再利用できる盤面の抜き出し)
                 solutions = filterSolutionsByHint(solutions, i, j, minValue)
                 print(f"ヒントを追加した後の残りの解の数: {len(solutions)}")
 
