@@ -5,7 +5,7 @@ import random
 from utility.printBoard import printBoard  # 必要に応じて
 
 
-def generateUniqueSolution2(board, maxSolutions):
+def generateUniqueSolutionP2(board, maxSolutions):
     startTime = time.time()
     numberOfHintsAdded = 0  # 追加したヒントの数をカウントする変数
     numberOfGeneratedBoards = []  # 各ステップで生成された解の数を保存するリスト
@@ -39,7 +39,7 @@ def generateUniqueSolution2(board, maxSolutions):
                 problem += exclude_constraint
 
                 # 進捗の表示
-                print(f"現在の解の数: {len(solutions)}")
+                print(f"解 {len(solutions)}")
             else:
                 print("全ての解盤面を生成しました。")
                 break  # 解が見つからなくなったらループを終了

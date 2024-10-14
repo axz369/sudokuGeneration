@@ -5,8 +5,10 @@ from modules.ConvertToNumber import ConvertToNumber
 from modules.Validation import Validation
 from modules.AddHintToLineSymmetry import AddHintToLineSymmetry
 from modules.UnifiedNumberOfHints import UnifiedNumberOfHints
-from modules.generateUniqueSolution1 import generateUniqueSolution1
-from modules.generateUniqueSolution2 import generateUniqueSolution2
+from modules.generateUniqueSolutionP1 import generateUniqueSolutionP1
+from modules.generateUniqueSolutionP2 import generateUniqueSolutionP2
+from modules.generateUniqueSolutionG1 import generateUniqueSolutionG1
+from modules.generateUniqueSolutionG2 import generateUniqueSolutionG2
 
 from utility.generateSolutionBoard import generateSolutionBoard
 from utility.printBoard import printBoard
@@ -19,11 +21,14 @@ if __name__ == "__main__":
     INPUT_FILE = 'input9.json'
     INPUT_KEY = 'input6'
 
-    # アルゴリズムの選択 (1: generateUniqueSolution1, 2: generateUniqueSolution2)
-    ALGORITHM_CHOICE = 2
+    # ソルバータイプの選択 (P: PuLP, G: Gurobi)
+    SOLVER_TYPE = "G"
+
+    # アルゴリズムの選択 (1: 解の補充なし, 2: 解の補充あり)
+    ALGORITHM_CHOICE = 1
 
     if '9' in INPUT_FILE:
-        MAX_SOLUTIONS = 600
+        MAX_SOLUTIONS = 100
         TARGET_HINT_COUNT = 25
     elif '16' in INPUT_FILE:
         MAX_SOLUTIONS = 200
@@ -63,8 +68,7 @@ if __name__ == "__main__":
         print("バリデーション成功")
 
     # generateSolutionBoard関数を使用して解盤面Aを取得
-    boardA = [row[:]
-              for row in dataConvertedToNumbers['boardConvertedToNumber']]
+    boardA = [row[:] for row in dataConvertedToNumbers['boardConvertedToNumber']]
     isSolutionGenerated = generateSolutionBoard(boardA)  # 解盤面Aを生成
 
     if not isSolutionGenerated:
@@ -128,15 +132,21 @@ if __name__ == "__main__":
 
     # 唯一解の生成
     startTime = time.time()
-    if ALGORITHM_CHOICE == 1:
-        uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolution1(
-            selectedBoard, MAX_SOLUTIONS)
-    elif ALGORITHM_CHOICE == 2:
-        problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolution2(
-            selectedBoard, MAX_SOLUTIONS)
+
+    if SOLVER_TYPE == "P":
+        if ALGORITHM_CHOICE == 1:
+            uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionP1(selectedBoard, MAX_SOLUTIONS)
+        elif ALGORITHM_CHOICE == 2:
+            problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionP2(selectedBoard, MAX_SOLUTIONS)
+    elif SOLVER_TYPE == "G":
+        if ALGORITHM_CHOICE == 1:
+            uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionG1(selectedBoard, MAX_SOLUTIONS)
+        elif ALGORITHM_CHOICE == 2:
+            problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionG2(selectedBoard, MAX_SOLUTIONS)
     else:
-        print("無効なアルゴリズム選択です。1または2を選択してください。")
+        print("無効なソルバータイプです。PまたはGを選択してください。")
         exit(1)
+
     endTime = time.time()
 
     if uniqueSolution:
