@@ -25,11 +25,11 @@ if __name__ == "__main__":
     SOLVER_TYPE = "G"
 
     # アルゴリズムの選択 (1: 解の補充なし, 2: 解の補充あり)
-    ALGORITHM_CHOICE = 1
+    ALGORITHM_CHOICE = 2
 
     if '9' in INPUT_FILE:
-        MAX_SOLUTIONS = 100
-        TARGET_HINT_COUNT = 25
+        MAX_SOLUTIONS = 1000
+        TARGET_HINT_COUNT = 20
     elif '16' in INPUT_FILE:
         MAX_SOLUTIONS = 200
         TARGET_HINT_COUNT = 140
