@@ -10,7 +10,8 @@ from modules.generateUniqueSolutionP2 import generateUniqueSolutionP2
 from modules.generateUniqueSolutionG1 import generateUniqueSolutionG1
 from modules.generateUniqueSolutionG2 import generateUniqueSolutionG2
 
-from utility.generateSolutionBoard import generateSolutionBoard
+from utility.generateSolutionBoardP import generateSolutionBoardP
+from utility.generateSolutionBoardG import generateSolutionBoardG
 from utility.printBoard import printBoard
 
 
@@ -69,7 +70,15 @@ if __name__ == "__main__":
 
     # generateSolutionBoard関数を使用して解盤面Aを取得
     boardA = [row[:] for row in dataConvertedToNumbers['boardConvertedToNumber']]
-    isSolutionGenerated = generateSolutionBoard(boardA)  # 解盤面Aを生成
+
+
+    if SOLVER_TYPE == "P":
+        isSolutionGenerated = generateSolutionBoardP(boardA)
+    elif SOLVER_TYPE == "G":
+       isSolutionGenerated = generateSolutionBoardG(boardA)
+    else:
+        print("無効なソルバータイプです。PまたはGを選択してください。")
+        exit(1)
 
     if not isSolutionGenerated:
         print("解盤面Aの生成に失敗しました。")
