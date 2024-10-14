@@ -1,6 +1,6 @@
 import time
 import pulp
-import random  # ランダムな選択のために追加
+import random
 
 from utility.printBoard import printBoard
 
