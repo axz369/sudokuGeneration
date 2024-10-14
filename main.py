@@ -22,7 +22,7 @@ if __name__ == "__main__":
     INPUT_KEY = 'input6'
 
     # ソルバータイプの選択 (P: PuLP, G: Gurobi)
-    SOLVER_TYPE = "G"
+    SOLVER_TYPE = "P"
 
     # アルゴリズムの選択 (1: 解の補充なし, 2: 解の補充あり)
     ALGORITHM_CHOICE = 1
@@ -135,7 +135,7 @@ if __name__ == "__main__":
 
     if SOLVER_TYPE == "P":
         if ALGORITHM_CHOICE == 1:
-            uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionP1(selectedBoard, MAX_SOLUTIONS)
+            problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionP1(selectedBoard, MAX_SOLUTIONS)
         elif ALGORITHM_CHOICE == 2:
             problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionP2(selectedBoard, MAX_SOLUTIONS)
     elif SOLVER_TYPE == "G":

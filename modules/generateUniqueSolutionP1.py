@@ -70,7 +70,7 @@ def generateUniqueSolutionP1(board, maxSolutions):
         currentTime = time.time()
         if currentTime - startTime > 1800:  # 30分（1800秒）を超えた場合
             print("30分を超えたため処理を終了します。")
-            return None, numberOfHintsAdded, numberOfGeneratedBoards  # numberOfGeneratedBoardsも返す
+            return None, numberOfHintsAdded, numberOfGeneratedBoards, solutionCount
 
         # 問題を解く
         status = problem.solve(pulp.PULP_CBC_CMD(msg=False))
@@ -136,7 +136,8 @@ def generateUniqueSolutionP1(board, maxSolutions):
                     break
             else:
                 print("エラー: 対応する解盤面が見つかりませんでした。")
-                return None, numberOfHintsAdded, numberOfGeneratedBoards
+                return None, numberOfHintsAdded, numberOfGeneratedBoards, solutionCount
+
 
             # その解盤面からヒントを追加していく
             while True:
@@ -148,13 +149,14 @@ def generateUniqueSolutionP1(board, maxSolutions):
                     print(f"追加したヒントの数: {numberOfHintsAdded}")
                     print("最終的な盤面:")
                     printBoard(board)
-                    return board, numberOfHintsAdded, numberOfGeneratedBoards
+                    return board, currentSolution, numberOfHintsAdded, numberOfGeneratedBoards
                 else:
                     # ヒントを追加する
                     empty_positions = [(x, y) for x in range(size) for y in range(size) if board[x][y] == 0]
                     if not empty_positions:
                         print("エラー: ヒントを追加できるマスがありません。")
-                        return None, numberOfHintsAdded, numberOfGeneratedBoards
+                        return None, numberOfHintsAdded, numberOfGeneratedBoards, solutionCount
+
 
                     # ランダムに位置を選択
                     random.shuffle(empty_positions)
@@ -168,7 +170,7 @@ def generateUniqueSolutionP1(board, maxSolutions):
                 currentTime = time.time()
                 if currentTime - startTime > 1800:  # 30分（1800秒）を超えた場合
                     print("30分を超えたため処理を終了します。")
-                    return None, numberOfHintsAdded, numberOfGeneratedBoards  # numberOfGeneratedBoardsも返す
+                    return None, numberOfHintsAdded, numberOfGeneratedBoards, solutionCount
         else:
             # 配列の中で1以上かつ最小の値を確定
             minCount = float('inf')
@@ -186,7 +188,7 @@ def generateUniqueSolutionP1(board, maxSolutions):
 
             if minCell is None:
                 print("エラー: 最小出現回数のセルが見つかりませんでした。")
-                return None, numberOfHintsAdded, numberOfGeneratedBoards
+                return None, numberOfHintsAdded, numberOfGeneratedBoards, solutionCount
 
             # 確定したマスから残りの可能性の盤面のみ抜き出す
             i, j = minCell
@@ -205,7 +207,7 @@ def generateUniqueSolutionP1(board, maxSolutions):
             # 残った解盤面がない場合、エラー
             if not remainingSolutions:
                 print("エラー: 残った解盤面がありません。")
-                return None, numberOfHintsAdded, numberOfGeneratedBoards
+                return None, numberOfHintsAdded, numberOfGeneratedBoards, solutionCount
 
             # 残った解盤面からoccurrenceCountを再計算
             occurrenceCount = [
@@ -229,7 +231,7 @@ def generateUniqueSolutionP1(board, maxSolutions):
         currentTime = time.time()
         if currentTime - startTime > 1800:  # 30分（1800秒）を超えた場合
             print("30分を超えたため処理を終了します。")
-            return None, numberOfHintsAdded, numberOfGeneratedBoards  # numberOfGeneratedBoardsも返す
+            return None, numberOfHintsAdded, numberOfGeneratedBoards, solutionCount
 
 
 def checkUniqueSolution(board, size, currentSolution):
