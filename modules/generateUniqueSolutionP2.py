@@ -5,7 +5,7 @@ import random
 from utility.printBoard import printBoard  # 必要に応じて
 
 
-def generateUniqueSolutionP2(board, maxSolutions):
+def generateUniqueSolutionP2(board, maxSolutions, LIMIT_TIME):
     startTime = time.time()
     numberOfHintsAdded = 0  # 追加したヒントの数をカウントする変数
     numberOfGeneratedBoards = []  # 各ステップで生成された解の数を保存するリスト
@@ -15,7 +15,7 @@ def generateUniqueSolutionP2(board, maxSolutions):
 
     while True:
         currentTime = time.time()
-        if currentTime - startTime > 1800:  # 30 分を超えた場合
+        if currentTime - startTime > LIMIT_TIME:
             print("30 分を超えたため処理を終了します。")
             return None, None, numberOfHintsAdded, numberOfGeneratedBoards
 

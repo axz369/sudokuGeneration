@@ -23,14 +23,11 @@ if __name__ == "__main__":
     INPUT_FILE = 'input9.json'
     INPUT_KEY = 'input6'
 
-    # ソルバータイプの選択 (P: PuLP, G: Gurobi)
-    SOLVER_TYPE = "G"
+    ALGORITHM_CHOICE = 2 # 1: 解の補充なし, 2: 解の補充あり
 
-    # アルゴリズムの選択 (1: 解の補充なし, 2: 解の補充あり)
-    ALGORITHM_CHOICE = 2
-
-    # 線対称へのヒント追加を行うかどうか (1: 行う, 0: 行わない)
-    AddHintToLineTarget = 0
+    SOLVER_TYPE = 'G'  # 'P':PuLP 'G':Gurobi
+    AddHintToLineTarget = 0  # 1: 線対称にヒントを追加する, 0: 線対称ヒントを追加しない
+    LIMIT_TIME = 60
 
     if '9' in INPUT_FILE:
         MAX_SOLUTIONS = 1000
@@ -177,14 +174,14 @@ if __name__ == "__main__":
 
     if SOLVER_TYPE == "P":
         if ALGORITHM_CHOICE == 1:
-            problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionP1(selectedBoard, MAX_SOLUTIONS)
+            problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionP1(selectedBoard, MAX_SOLUTIONS, LIMIT_TIME)
         elif ALGORITHM_CHOICE == 2:
-            problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionP2(selectedBoard, MAX_SOLUTIONS)
+            problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionP2(selectedBoard, MAX_SOLUTIONS, LIMIT_TIME)
     elif SOLVER_TYPE == "G":
         if ALGORITHM_CHOICE == 1:
-            problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionG1(selectedBoard, MAX_SOLUTIONS)
+            problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionG1(selectedBoard, MAX_SOLUTIONS, LIMIT_TIME)
         elif ALGORITHM_CHOICE == 2:
-            problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionG2(selectedBoard, MAX_SOLUTIONS)
+            problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionG2(selectedBoard, MAX_SOLUTIONS, LIMIT_TIME)
     else:
         print("無効なソルバータイプです。PまたはGを選択してください。")
         exit(1)
