@@ -1,5 +1,6 @@
 import time
 import json
+import random  # ランダムなヒント追加のために追加
 
 from modules.ConvertToNumber import ConvertToNumber
 from modules.Validation import Validation
@@ -27,6 +28,9 @@ if __name__ == "__main__":
 
     # アルゴリズムの選択 (1: 解の補充なし, 2: 解の補充あり)
     ALGORITHM_CHOICE = 2
+
+    # 線対称へのヒント追加を行うかどうか (1: 行う, 0: 行わない)
+    AddHintToLineTarget = 0
 
     if '9' in INPUT_FILE:
         MAX_SOLUTIONS = 1000
@@ -71,11 +75,10 @@ if __name__ == "__main__":
     # generateSolutionBoard関数を使用して解盤面Aを取得
     boardA = [row[:] for row in dataConvertedToNumbers['boardConvertedToNumber']]
 
-
     if SOLVER_TYPE == "P":
         isSolutionGenerated = generateSolutionBoardP(boardA)
     elif SOLVER_TYPE == "G":
-       isSolutionGenerated = generateSolutionBoardG(boardA)
+        isSolutionGenerated = generateSolutionBoardG(boardA)
     else:
         print("無効なソルバータイプです。PまたはGを選択してください。")
         exit(1)
@@ -87,57 +90,87 @@ if __name__ == "__main__":
         print("解盤面Aが生成されました")
         printBoard(converter.convertBack(boardA))
 
-    # 対称性に基づいたヒントを追加するクラスを作成
-    symmetryAdder = AddHintToLineSymmetry(
-        dataConvertedToNumbers['boardConvertedToNumber'], boardA)
+    # AddHintToLineTarget の値に応じて処理を分岐
+    if AddHintToLineTarget == 1:
+        # 対称性に基づいたヒントを追加するクラスを作成
+        symmetryAdder = AddHintToLineSymmetry(
+            dataConvertedToNumbers['boardConvertedToNumber'], boardA)
 
-    # 4つの対称盤面を取得
-    symmetricBoards = symmetryAdder.getSymmetricBoards()
+        # 4つの対称盤面を取得
+        symmetricBoards = symmetryAdder.getSymmetricBoards()
 
-    # 対称性タイプのリストを定義
-    symmetryTypes = ["horizontal", "vertical", "diagonal_up", "diagonal_down"]
+        # 対称性タイプのリストを定義
+        symmetryTypes = ["horizontal", "vertical", "diagonal_up", "diagonal_down"]
 
-    # 対称軸に追加した直後の盤面を表示
-    print("******************************************")
-    print("対称軸に追加した直後の盤面:")
-    print("******************************************")
+        # 対称軸に追加した直後の盤面を表示
+        print("******************************************")
+        print("対称軸に追加した直後の盤面:")
+        print("******************************************")
 
-    for symmetry_type, board in zip(symmetryTypes, symmetricBoards):
-        print(f"\n{symmetry_type}Symmetry:")
-        printBoard(converter.convertBack(board))
+        for symmetry_type, board in zip(symmetryTypes, symmetricBoards):
+            print(f"\n{symmetry_type}Symmetry:")
+            printBoard(converter.convertBack(board))
 
-    # ヒント数の統一処理
-    hintUnifier = UnifiedNumberOfHints(
-        symmetricBoards, boardA, targetHintCount=TARGET_HINT_COUNT)
-    unifiedBoards = hintUnifier.unifyHints()
+        # ヒント数の統一処理
+        hintUnifier = UnifiedNumberOfHints(
+            symmetricBoards, boardA, targetHintCount=TARGET_HINT_COUNT)
+        unifiedBoards = hintUnifier.unifyHints()
 
-    # ヒント数統一後の盤面を表示
-    print("\n******************************************")
-    print("ヒント数統一後の盤面:")
-    print("******************************************")
-    for symmetry_type, board in zip(symmetryTypes, unifiedBoards):
-        print(f"\n{symmetry_type}Symmetry:")
-        printBoard(converter.convertBack(board))
+        # ヒント数統一後の盤面を表示
+        print("\n******************************************")
+        print("ヒント数統一後の盤面:")
+        print("******************************************")
+        for symmetry_type, board in zip(symmetryTypes, unifiedBoards):
+            print(f"\n{symmetry_type}Symmetry:")
+            printBoard(converter.convertBack(board))
 
-    # 4盤面から選択
-    while True:
-        print("\nどの盤面を選びますか?")
-        for i, name in enumerate(symmetryTypes):
-            print(f"{i + 1}: {name}Symmetry")
+        # 4盤面から選択
+        while True:
+            print("\nどの盤面を選びますか?")
+            for i, name in enumerate(symmetryTypes):
+                print(f"{i + 1}: {name}Symmetry")
 
-        try:
-            choice = int(input("選択: ")) - 1
-            if 0 <= choice < len(symmetryTypes):
-                selectedBoard = unifiedBoards[choice]
-                selectedBoardName = f"{symmetryTypes[choice]}Symmetry"
+            try:
+                choice = int(input("選択: ")) - 1
+                if 0 <= choice < len(symmetryTypes):
+                    selectedBoard = unifiedBoards[choice]
+                    selectedBoardName = f"{symmetryTypes[choice]}Symmetry"
+                    break
+                else:
+                    print("無効な選択です。もう一度選んでください。")
+            except ValueError:
+                print("無効な入力です。数字で選択してください。")
+
+        print(f"選ばれた盤面 : {selectedBoardName}")
+        printBoard(selectedBoard)
+
+    else:
+        # 対称性に基づいたヒント追加をスキップし、ランダムにヒントを追加
+        selectedBoard = [[0 for _ in range(maxNumber)] for _ in range(maxNumber)]  # 空の盤面を作成
+        positions = [(i, j) for i in range(maxNumber) for j in range(maxNumber)]
+        random.shuffle(positions)
+
+        # 入力盤面のヒントを追加
+        hints_added = 0
+        for i in range(maxNumber):
+            for j in range(maxNumber):
+                if dataConvertedToNumbers['boardConvertedToNumber'][i][j] != 0:
+                    selectedBoard[i][j] = dataConvertedToNumbers['boardConvertedToNumber'][i][j]
+                    hints_added += 1
+
+        # 残りのヒントをランダムに追加
+        for pos in positions:
+            if hints_added >= TARGET_HINT_COUNT:
                 break
-            else:
-                print("無効な選択です。もう一度選んでください。")
-        except ValueError:
-            print("無効な入力です。数字で選択してください。")
+            i, j = pos
+            if selectedBoard[i][j] == 0:
+                selectedBoard[i][j] = boardA[i][j]
+                hints_added += 1
 
-    print(f"選ばれた盤面 : {selectedBoardName}")
-    printBoard(selectedBoard)
+        selectedBoardName = "Random Hints"
+        print("対称性に基づいたヒント追加をスキップし、解盤面Aからランダムにヒントを追加しました。")
+        print(f"選ばれた盤面 : {selectedBoardName}")
+        printBoard(selectedBoard)
 
     # 唯一解の生成
     startTime = time.time()
