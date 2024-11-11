@@ -12,13 +12,9 @@ def generateUniqueSolutionG3(board, maxSolutions, LIMIT_TIME):
     numberOfGeneratedBoards = []  # 各ステップで生成された解の数を保存するリスト
     numberOfReusedSolutions = []  # 各ステップで再利用した解の数を保存するリスト
     previousSolutions = []  # 前回の解を保存するリスト
-    lastHintPosition = None  # 最後に追加したヒントの位置を記録する変数
 
     print("唯一解生成開始")
     size = len(board)
-
-    # 初期モデルを定義
-    model, isValueInCell = defineSudokuProblem(board, size)
 
     while True:
         currentTime = time.time()
@@ -26,40 +22,28 @@ def generateUniqueSolutionG3(board, maxSolutions, LIMIT_TIME):
             print(f"{LIMIT_TIME} 秒を超えたため処理を終了します。")
             return None, None, numberOfHintsAdded, numberOfGeneratedBoards, numberOfReusedSolutions
 
+        # ステップ① 解盤面を最大 maxSolutions 個生成
+        # 問題を再定義
+        model, isValueInCell = defineSudokuProblem(board, size)
+
         solutions = []  # 生成された解を保存するリスト
 
-        # previousSolutions が存在する場合、それらを除外する制約を追加
-        for sol in previousSolutions:
-            # sol[i][j] が 1 以上であることを確認
-            exclude_constraint = gp.quicksum(
-                isValueInCell[i, j, sol[i][j]]
-                for i in range(size) for j in range(size) if sol[i][j] > 0
-            ) <= (size * size) - 1
-            model.addConstr(exclude_constraint)
-
-        # ステップ② 解盤面を最大 maxSolutions 個生成
         while len(solutions) < maxSolutions:
-            # モデルの最適化
+            # 問題を解く
             model.optimize()
             if model.Status == GRB.OPTIMAL:
-                # 解盤面の情報を配列に保存
+                # ステップ② 解盤面の情報を配列に保存
                 solution = extractSolution(isValueInCell, size)
+                solutions.append(solution)
 
-                # 解盤面が完全かどうかを確認
-                if all(solution[i][j] > 0 for i in range(size) for j in range(size)):
-                    solutions.append(solution)
+                # ステップ③ 解盤面の除外の制約を追加
+                exclude_constraint = gp.quicksum(
+                    isValueInCell[i, j, solution[i][j]] for i in range(size) for j in range(size)
+                ) <= (size * size) - 1
+                model.addConstr(exclude_constraint)
 
-                    # ステップ③ 解盤面の除外の制約を追加
-                    exclude_constraint = gp.quicksum(
-                        isValueInCell[i, j, solution[i][j]]
-                        for i in range(size) for j in range(size) if solution[i][j] > 0
-                    ) <= (size * size) - 1
-                    model.addConstr(exclude_constraint)
-
-                    # 進捗の表示
-                    print(f"解 {len(solutions)}")
-                else:
-                    print("不完全な解が生成されました。スキップします。")
+                # 進捗の表示
+                print(f"解 {len(solutions)}")
             else:
                 print("全ての解盤面を生成しました。")
                 break  # 解が見つからなくなったらループを終了
@@ -67,7 +51,7 @@ def generateUniqueSolutionG3(board, maxSolutions, LIMIT_TIME):
         numberOfGeneratedBoards.append(len(solutions))
         print(f"生成された解の数: {len(solutions)}")
 
-        # ステップ⑤ 生成できたのが 1 盤面だけ
+        # ステップ⑤ 生成できたのが 1 盤面だけ？
         if len(solutions) == 1:
             print("唯一解が見つかりました。")
             unique_solution = solutions[0]  # 解盤面を保存
@@ -78,25 +62,20 @@ def generateUniqueSolutionG3(board, maxSolutions, LIMIT_TIME):
             # 再利用した解の数（最後のステップなので0）
             numberOfReusedSolutions.append(0)
 
+            # **ここで5つの返却値を返すように修正**
             return problem_board, unique_solution, numberOfHintsAdded, numberOfGeneratedBoards, numberOfReusedSolutions
-
         elif len(solutions) == 0:
             print("エラー: 解が存在しません。追加したヒントを元に戻します。")
             # 最後に追加したヒントを取り消す
             if numberOfHintsAdded == 0:
                 print("これ以上ヒントを取り消せません。唯一解の生成に失敗しました。")
+                # **ここで5つの返却値を返すように修正**
                 return None, None, numberOfHintsAdded, numberOfGeneratedBoards, numberOfReusedSolutions
-            if lastHintPosition is not None:
-                i, j = lastHintPosition
-                board[i][j] = 0
-                numberOfHintsAdded -= 1
-                print(f"ヒントを取り消しました: マス ({i + 1}, {j + 1})")
-            else:
-                print("エラー: 最後のヒント位置が記録されていません。")
-            # モデルを再定義
-            model, isValueInCell = defineSudokuProblem(board, size)
-            continue  # ヒントを取り消した後、再度ループの最初から
-
+            i, j = lastHintPosition
+            board[i][j] = 0
+            numberOfHintsAdded -= 1
+            # ヒントを戻した後、再度解を探索
+            continue
         else:
             # ステップ⑥ 投票配列に格納
             occurrenceCount = calculateOccurrenceCount(solutions, size)
@@ -106,6 +85,7 @@ def generateUniqueSolutionG3(board, maxSolutions, LIMIT_TIME):
                 occurrenceCount, board, size)
             if minCell is None:
                 print("エラー: 最小出現回数のセルが見つかりませんでした。")
+                # **ここで5つの返却値を返すように修正**
                 return None, None, numberOfHintsAdded, numberOfGeneratedBoards, numberOfReusedSolutions
 
             i, j = minCell
@@ -113,7 +93,10 @@ def generateUniqueSolutionG3(board, maxSolutions, LIMIT_TIME):
             lastHintPosition = (i, j)  # 最後に追加したヒントの位置を記録
             numberOfHintsAdded += 1
             print(f"マス ({i + 1}, {j + 1}) に値 {minValue} を追加しました。")
-            print(f"現在追加したヒントの数: {numberOfHintsAdded}")
+
+            # ステップ⑧ 投票配列と今までの制約をリセット
+            occurrenceCount = None  # 投票配列をリセット
+            model = None  # 問題をリセット
 
             # ステップ⑨ 最小の値が 2 以上か確認
             if minCount >= 2:
@@ -128,9 +111,6 @@ def generateUniqueSolutionG3(board, maxSolutions, LIMIT_TIME):
                     # ヒントを取り消す
                     board[i][j] = 0
                     numberOfHintsAdded -= 1
-                    print(f"ヒントを取り消しました: マス ({i + 1}, {j + 1})")
-                    # モデルを再定義
-                    model, isValueInCell = defineSudokuProblem(board, size)
                     continue  # 再度ループの最初から
 
                 # 再利用した解の数を記録
@@ -142,34 +122,23 @@ def generateUniqueSolutionG3(board, maxSolutions, LIMIT_TIME):
                     print(f"解 {idx + 1}:")
                     printBoard(solution)
 
-                # previousSolutions にフィルタリングされた解を追加
-                previousSolutions.extend(filteredSolutions)
-
-                # ヒント追加後、モデルを再定義して制約をリセット
-                model, isValueInCell = defineSudokuProblem(board, size)
-
-                # previousSolutions を除外する制約を再追加
-                for sol in previousSolutions:
-                    exclude_constraint = gp.quicksum(
-                        isValueInCell[x, y, sol[x][y]]
-                        for x in range(size) for y in range(size) if sol[x][y] > 0
-                    ) <= (size * size) - 1
-                    model.addConstr(exclude_constraint)
+                # 次のループで再利用する解を保存
+                previousSolutions = filteredSolutions.copy()
 
                 continue  # ステップ①へ戻る
-
             else:
                 print("最小の値が 1")
-                # 再利用した解の数は0
+                # 再利用した解の数は 0
                 numberOfReusedSolutions.append(0)
 
-                # previousSolutions をクリア
+                # 次のループでは新たに解を生成するため、previousSolutions を空にする
                 previousSolutions = []
 
-                # ヒント追加後、モデルを再定義して制約をリセット
-                model, isValueInCell = defineSudokuProblem(board, size)
-
                 continue  # ステップ①へ戻る（再度解を生成）
+
+    # 万が一ここに到達した場合
+    # **ここで5つの返却値を返すように修正**
+    return None, None, numberOfHintsAdded, numberOfGeneratedBoards, numberOfReusedSolutions
 
 
 # 以下の関数はそのまま
@@ -189,7 +158,7 @@ def defineSudokuProblem(board, size):
         for j in range(size):
             model.addConstr(
                 gp.quicksum(isValueInCell[i, j, k]
-                           for k in range(1, size + 1)) == 1
+                            for k in range(1, size + 1)) == 1
             )
 
     # 2. 各行には 1 からサイズの数字が 1 つずつ入る
@@ -197,7 +166,7 @@ def defineSudokuProblem(board, size):
         for k in range(1, size + 1):
             model.addConstr(
                 gp.quicksum(isValueInCell[i, j, k]
-                           for j in range(size)) == 1
+                            for j in range(size)) == 1
             )
 
     # 3. 各列には 1 からサイズの数字が 1 つずつ入る
@@ -205,7 +174,7 @@ def defineSudokuProblem(board, size):
         for k in range(1, size + 1):
             model.addConstr(
                 gp.quicksum(isValueInCell[i, j, k]
-                           for i in range(size)) == 1
+                            for i in range(size)) == 1
             )
 
     # 4. 各ブロックには 1 からサイズの数字が 1 つずつ入る
@@ -248,8 +217,7 @@ def calculateOccurrenceCount(solutions, size):
         for i in range(size):
             for j in range(size):
                 value = solution[i][j]
-                if value > 0:
-                    occurrenceCount[i][j][value - 1] += 1
+                occurrenceCount[i][j][value - 1] += 1
     return occurrenceCount
 
 
