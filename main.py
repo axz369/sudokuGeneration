@@ -6,9 +6,11 @@ from modules.ConvertToNumber import ConvertToNumber
 from modules.Validation import Validation
 from modules.AddHintToLineSymmetry import AddHintToLineSymmetry
 from modules.UnifiedNumberOfHints import UnifiedNumberOfHints
-from modules.generateUniqueSolutionG0 import generateUniqueSolutionG0
+
+from modules.generateUniqueSolutionOriginal import generateUniqueSolutionOriginal
 from modules.generateUniqueSolutionG1 import generateUniqueSolutionG1
 from modules.generateUniqueSolutionG2 import generateUniqueSolutionG2
+from modules.generateUniqueSolutionG3 import generateUniqueSolutionG3
 
 from utility.generateSolutionBoardG import generateSolutionBoardG
 from utility.printBoard import printBoard
@@ -21,15 +23,15 @@ if __name__ == "__main__":
     INPUT_FILE = 'input9.json'
     INPUT_KEY = 'input1'
 
-    ALGORITHM_CHOICE = 2  # 0: 再利用なし 1: 再利用あり(解の補充なし), 2: 再利用あり(解の補充あり)
+    ALGORITHM_CHOICE = 1  # 0: 再利用なし(オリジナル盤面保存あり) 1: 再利用なし(盤面保存なし) 2: 再利用あり(解の補充なし), 3: 再利用あり(解の補充あり)
     AddHintToLineTarget = 0  # 1: 線対称にヒントを追加する, 0: 線対称ヒントを追加しない
     LIMIT_TIME = 6000000000000000000
 
     if '9' in INPUT_FILE:
-        MAX_SOLUTIONS = 2000
+        MAX_SOLUTIONS = 1000
         TARGET_HINT_COUNT = 16
     elif '16' in INPUT_FILE:
-        MAX_SOLUTIONS = 300
+        MAX_SOLUTIONS = 3000
         TARGET_HINT_COUNT = 51
     elif '25' in INPUT_FILE:
         MAX_SOLUTIONS = 20
@@ -163,17 +165,22 @@ if __name__ == "__main__":
     startTime = time.time()
 
     if ALGORITHM_CHOICE == 0:
-        problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionG0(
+        problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionOriginal(
             selectedBoard, MAX_SOLUTIONS, LIMIT_TIME)
         numberOfGeneratedBoards = solutionsPerIteration  # 変数名を統一
         numberOfReusedSolutions = [0] * len(solutionsPerIteration)  # 再利用した解の数は0
-    elif ALGORITHM_CHOICE == 1:
+    elif ALGORITHM_CHOICE == 1: #問題例,解盤面,追加したヒントの数,再利用した解盤面数
         problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionG1(
             selectedBoard, MAX_SOLUTIONS, LIMIT_TIME)
         numberOfGeneratedBoards = solutionsPerIteration  # 変数名を統一
         numberOfReusedSolutions = [0] * len(solutionsPerIteration)  # 再利用した解の数は0
-    elif ALGORITHM_CHOICE == 2: #問題例,解盤面,追加したヒントの数,再利用した解盤面数
-        problemExample, uniqueSolution, numberOfHintsAdded, numberOfGeneratedBoards, numberOfReusedSolutions = generateUniqueSolutionG2(
+    elif ALGORITHM_CHOICE == 2:
+        problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionG2(
+            selectedBoard, MAX_SOLUTIONS, LIMIT_TIME)
+        numberOfGeneratedBoards = solutionsPerIteration  # 変数名を統一
+        numberOfReusedSolutions = [0] * len(solutionsPerIteration)  # 再利用した解の数は0
+    elif ALGORITHM_CHOICE == 3: #問題例,解盤面,追加したヒントの数,再利用した解盤面数
+        problemExample, uniqueSolution, numberOfHintsAdded, numberOfGeneratedBoards, numberOfReusedSolutions = generateUniqueSolutionG3(
             selectedBoard, MAX_SOLUTIONS, LIMIT_TIME)
 
     endTime = time.time()

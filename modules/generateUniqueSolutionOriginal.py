@@ -4,7 +4,7 @@ from gurobipy import GRB
 from utility.printBoard import printBoard
 
 
-def generateUniqueSolutionG0(board, MAX_SOLUTIONS, LIMIT_TIME):
+def generateUniqueSolutionOriginal(board, MAX_SOLUTIONS, LIMIT_TIME):
     start_time = time.time()
     numberOfHintsAdded = 0  # 追加したヒントの数をカウントする変数
     numberOfGeneratedBoards = []  # 各内部ループで生成された解の数を保存するリスト
@@ -16,6 +16,7 @@ def generateUniqueSolutionG0(board, MAX_SOLUTIONS, LIMIT_TIME):
 
     while True:  # 外部ループ: 内部ループ内で解盤面が一つしか見つからなくなったら終了
         solution_count = 0  # 解の数をカウント
+        solutions = []  # 生成された解を保存するリスト（追加）
 
         # 111~999の連続した配列 (0-indexedなので実際は[0][0][0]から[8][8][8])
         occurrence_count = [
@@ -82,6 +83,9 @@ def generateUniqueSolutionG0(board, MAX_SOLUTIONS, LIMIT_TIME):
                             if isValueInCell[i, j, k].x > 0.5:
                                 solution[i][j] = k + 1
 
+                # 解盤面を保存（追加）
+                solutions.append(solution)
+
                 # 111~999の連続した配列に情報を格納
                 for i in range(size):
                     for j in range(size):
@@ -102,12 +106,17 @@ def generateUniqueSolutionG0(board, MAX_SOLUTIONS, LIMIT_TIME):
 
         print(f"生成された解の数: {solution_count}")
 
+        # 保存された解盤面を表示（検証のため、必要に応じてコメントアウトを外してください）
+        # for idx, sol in enumerate(solutions):
+        #     print(f"解盤面 {idx + 1}:")
+        #     printBoard(sol)
+
         numberOfGeneratedBoards.append(solution_count)
 
         if solution_count == 1:
             print("唯一解が見つかりました。")
             print(f"追加したヒントの数: {numberOfHintsAdded}")
-            currentSolution = solution  # 唯一解を保存
+            currentSolution = solutions[0]  # 唯一解を保存
             return board, currentSolution, numberOfHintsAdded, numberOfGeneratedBoards
 
         # 最小出現回数のマスを見つける
@@ -137,6 +146,9 @@ def generateUniqueSolutionG0(board, MAX_SOLUTIONS, LIMIT_TIME):
         # 盤面の表示
         print("現在の盤面:")
         printBoard(board)
+
+        # ヒントを追加したので、保存した解盤面を削除（追加）
+        solutions.clear()
 
     # While ループが正常に終了した場合（通常はここには到達しない）
     return None, None, numberOfHintsAdded, numberOfGeneratedBoards
