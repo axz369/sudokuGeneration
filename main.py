@@ -19,21 +19,21 @@ if __name__ == "__main__":
     #########################################################
     # プログラム設定
     INPUT_FILE = 'input9.json'
-    INPUT_KEY = 'input6'
+    INPUT_KEY = 'input1'
 
-    ALGORITHM_CHOICE = 0  # 0: 再利用なし 1: 再利用あり(解の補充なし), 2: 再利用あり(解の補充あり)
+    ALGORITHM_CHOICE = 2  # 0: 再利用なし 1: 再利用あり(解の補充なし), 2: 再利用あり(解の補充あり)
     AddHintToLineTarget = 0  # 1: 線対称にヒントを追加する, 0: 線対称ヒントを追加しない
-    LIMIT_TIME = 60
+    LIMIT_TIME = 6000000000000000000
 
     if '9' in INPUT_FILE:
-        MAX_SOLUTIONS = 300
-        TARGET_HINT_COUNT = 20
+        MAX_SOLUTIONS = 2000
+        TARGET_HINT_COUNT = 16
     elif '16' in INPUT_FILE:
-        MAX_SOLUTIONS = 200
-        TARGET_HINT_COUNT = 140
+        MAX_SOLUTIONS = 300
+        TARGET_HINT_COUNT = 51
     elif '25' in INPUT_FILE:
-        MAX_SOLUTIONS = 10
-        TARGET_HINT_COUNT = 200
+        MAX_SOLUTIONS = 20
+        TARGET_HINT_COUNT = 250
     else:
         MAX_SOLUTIONS = 10
         TARGET_HINT_COUNT = 200
@@ -219,8 +219,10 @@ if __name__ == "__main__":
     print("\n******************************************")
     print("記録用")
     print("******************************************")
-    print(f"{numberOfHintsAdded} ", end="")
 
+    print(f"{generationTime:.2f}")
+
+    print(f"{numberOfHintsAdded} ", end="")
     output_list = []
     for i in range(len(numberOfGeneratedBoards)):
         generated = numberOfGeneratedBoards[i]
