@@ -6,8 +6,10 @@ from modules.ConvertToNumber import ConvertToNumber
 from modules.Validation import Validation
 from modules.AddHintToLineSymmetry import AddHintToLineSymmetry
 from modules.UnifiedNumberOfHints import UnifiedNumberOfHints
+from modules.generateUniqueSolutionP0 import generateUniqueSolutionP0
 from modules.generateUniqueSolutionP1 import generateUniqueSolutionP1
 from modules.generateUniqueSolutionP2 import generateUniqueSolutionP2
+from modules.generateUniqueSolutionG0 import generateUniqueSolutionG0
 from modules.generateUniqueSolutionG1 import generateUniqueSolutionG1
 from modules.generateUniqueSolutionG2 import generateUniqueSolutionG2
 
@@ -23,14 +25,14 @@ if __name__ == "__main__":
     INPUT_FILE = 'input9.json'
     INPUT_KEY = 'input6'
 
-    ALGORITHM_CHOICE = 2 # 1: 解の補充なし, 2: 解の補充あり
+    ALGORITHM_CHOICE = 0 # 0: 再利用なし 1: 再利用あり(解の補充なし), 2: 再利用あり(解の補充あり)
 
     SOLVER_TYPE = 'G'  # 'P':PuLP 'G':Gurobi
     AddHintToLineTarget = 0  # 1: 線対称にヒントを追加する, 0: 線対称ヒントを追加しない
     LIMIT_TIME = 60
 
     if '9' in INPUT_FILE:
-        MAX_SOLUTIONS = 1000
+        MAX_SOLUTIONS = 100
         TARGET_HINT_COUNT = 20
     elif '16' in INPUT_FILE:
         MAX_SOLUTIONS = 200
@@ -173,12 +175,16 @@ if __name__ == "__main__":
     startTime = time.time()
 
     if SOLVER_TYPE == "P":
-        if ALGORITHM_CHOICE == 1:
+        if ALGORITHM_CHOICE == 0:
+            problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionP0(selectedBoard, MAX_SOLUTIONS, LIMIT_TIME)
+        elif ALGORITHM_CHOICE == 1:
             problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionP1(selectedBoard, MAX_SOLUTIONS, LIMIT_TIME)
         elif ALGORITHM_CHOICE == 2:
             problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionP2(selectedBoard, MAX_SOLUTIONS, LIMIT_TIME)
     elif SOLVER_TYPE == "G":
-        if ALGORITHM_CHOICE == 1:
+        if ALGORITHM_CHOICE == 0:
+            problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionG0(selectedBoard, MAX_SOLUTIONS, LIMIT_TIME)
+        elif ALGORITHM_CHOICE == 1:
             problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionG1(selectedBoard, MAX_SOLUTIONS, LIMIT_TIME)
         elif ALGORITHM_CHOICE == 2:
             problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionG2(selectedBoard, MAX_SOLUTIONS, LIMIT_TIME)
