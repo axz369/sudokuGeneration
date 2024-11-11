@@ -21,12 +21,12 @@ if __name__ == "__main__":
     INPUT_FILE = 'input9.json'
     INPUT_KEY = 'input6'
 
-    ALGORITHM_CHOICE = 0 # 0: 再利用なし 1: 再利用あり(解の補充なし), 2: 再利用あり(解の補充あり)
+    ALGORITHM_CHOICE = 0  # 0: 再利用なし 1: 再利用あり(解の補充なし), 2: 再利用あり(解の補充あり)
     AddHintToLineTarget = 0  # 1: 線対称にヒントを追加する, 0: 線対称ヒントを追加しない
     LIMIT_TIME = 60
 
     if '9' in INPUT_FILE:
-        MAX_SOLUTIONS = 100
+        MAX_SOLUTIONS = 300
         TARGET_HINT_COUNT = 20
     elif '16' in INPUT_FILE:
         MAX_SOLUTIONS = 200
@@ -163,11 +163,18 @@ if __name__ == "__main__":
     startTime = time.time()
 
     if ALGORITHM_CHOICE == 0:
-        problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionG0(selectedBoard, MAX_SOLUTIONS, LIMIT_TIME)
+        problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionG0(
+            selectedBoard, MAX_SOLUTIONS, LIMIT_TIME)
+        numberOfGeneratedBoards = solutionsPerIteration  # 変数名を統一
+        numberOfReusedSolutions = [0] * len(solutionsPerIteration)  # 再利用した解の数は0
     elif ALGORITHM_CHOICE == 1:
-        problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionG1(selectedBoard, MAX_SOLUTIONS, LIMIT_TIME)
-    elif ALGORITHM_CHOICE == 2:
-        problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionG2(selectedBoard, MAX_SOLUTIONS, LIMIT_TIME)
+        problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionG1(
+            selectedBoard, MAX_SOLUTIONS, LIMIT_TIME)
+        numberOfGeneratedBoards = solutionsPerIteration  # 変数名を統一
+        numberOfReusedSolutions = [0] * len(solutionsPerIteration)  # 再利用した解の数は0
+    elif ALGORITHM_CHOICE == 2: #問題例,解盤面,追加したヒントの数,再利用した解盤面数
+        problemExample, uniqueSolution, numberOfHintsAdded, numberOfGeneratedBoards, numberOfReusedSolutions = generateUniqueSolutionG2(
+            selectedBoard, MAX_SOLUTIONS, LIMIT_TIME)
 
     endTime = time.time()
 
@@ -199,18 +206,28 @@ if __name__ == "__main__":
     generationTime = endTime - startTime
     print(f"生成時間: {generationTime:.2f}秒")
 
-    # 各内部ループで生成された解の数を表示
+    # 各ステップで生成された解の数と再利用した解の数を表示
     print("\n******************************************")
-    print("各内部ループで生成された解の数:")
+    print("各ステップで生成された解の数と再利用した解の数:")
     print("******************************************")
-    for iteration, solutions in enumerate(solutionsPerIteration, 1):
-        print(f"ループ {iteration}: {solutions} 個の解が生成されました")
+    for idx, (generated, reused) in enumerate(zip(numberOfGeneratedBoards, numberOfReusedSolutions)):
+        if reused > 0:
+            print(f"ステップ {idx + 1}: {generated} 個の解が生成され、フィルタリング後に {reused} 個の解を再利用しました")
+        else:
+            print(f"ステップ {idx + 1}: {generated} 個の解が生成されました")
 
     print("\n******************************************")
     print("記録用")
     print("******************************************")
-    print(f"{generationTime:.2f}")
-    # 解が1つだけの場合は除外する
-    solutions_list = [
-        solutions for solutions in solutionsPerIteration if solutions > 1]
-    print(f"{len(solutions_list)}{solutions_list}")
+    print(f"{numberOfHintsAdded} ", end="")
+
+    output_list = []
+    for i in range(len(numberOfGeneratedBoards)):
+        generated = numberOfGeneratedBoards[i]
+        reused = numberOfReusedSolutions[i - 1] if i > 0 else 0
+        if reused > 0:
+            output_list.append(f"{generated}({reused})")
+        else:
+            output_list.append(f"{generated}")
+
+    print(f"[{', '.join(output_list)}]")
