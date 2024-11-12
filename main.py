@@ -23,12 +23,12 @@ if __name__ == "__main__":
     INPUT_FILE = 'input9.json'
     INPUT_KEY = 'input1'
 
-    ALGORITHM_CHOICE = 1  # 0: 再利用なし(オリジナル盤面保存あり) 1: 再利用なし(盤面保存なし) 2: 再利用あり(解の補充なし), 3: 再利用あり(解の補充あり)
+    ALGORITHM_CHOICE = 3  # 0: 再利用なし(オリジナル盤面保存あり) 1: 再利用なし(盤面保存なし) 2: 再利用あり(解の補充なし), 3: 再利用あり(解の補充あり)
     AddHintToLineTarget = 0  # 1: 線対称にヒントを追加する, 0: 線対称ヒントを追加しない
     LIMIT_TIME = 6000000000000000000
 
     if '9' in INPUT_FILE:
-        MAX_SOLUTIONS = 1000
+        MAX_SOLUTIONS = 300
         TARGET_HINT_COUNT = 16
     elif '16' in INPUT_FILE:
         MAX_SOLUTIONS = 3000

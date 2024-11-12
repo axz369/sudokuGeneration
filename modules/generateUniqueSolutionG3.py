@@ -11,7 +11,7 @@ def generateUniqueSolutionG3(board, maxSolutions, LIMIT_TIME):
     numberOfHintsAdded = 0  # 追加したヒントの数をカウントする変数
     numberOfGeneratedBoards = []  # 各ステップで生成された解の数を保存するリスト
     numberOfReusedSolutions = []  # 各ステップで再利用した解の数を保存するリスト
-    previousSolutions = []  # 前回の解を保存するリスト
+    reuseBoard = []  # 再利用可能な解盤面を保存するリスト
 
     print("唯一解生成開始")
     size = len(board)
@@ -27,6 +27,15 @@ def generateUniqueSolutionG3(board, maxSolutions, LIMIT_TIME):
         model, isValueInCell = defineSudokuProblem(board, size)
 
         solutions = []  # 生成された解を保存するリスト
+
+        # reuseBoard が存在する場合、それを使用して解をフィルタリング
+        if reuseBoard:
+            # 上書きして再利用
+            solutions = reuseBoard
+            # 再利用盤面の生成を除外する制約追加
+            for sol in reuseBoard:
+                model.addConstr(gp.quicksum(isValueInCell[i, j, sol[i][j]]
+                                            for i in range(size) for j in range(size)) <= size * size - 1)
 
         while len(solutions) < maxSolutions:
             # 問題を解く
@@ -64,18 +73,6 @@ def generateUniqueSolutionG3(board, maxSolutions, LIMIT_TIME):
 
             # **ここで5つの返却値を返すように修正**
             return problem_board, unique_solution, numberOfHintsAdded, numberOfGeneratedBoards, numberOfReusedSolutions
-        elif len(solutions) == 0:
-            print("エラー: 解が存在しません。追加したヒントを元に戻します。")
-            # 最後に追加したヒントを取り消す
-            if numberOfHintsAdded == 0:
-                print("これ以上ヒントを取り消せません。唯一解の生成に失敗しました。")
-                # **ここで5つの返却値を返すように修正**
-                return None, None, numberOfHintsAdded, numberOfGeneratedBoards, numberOfReusedSolutions
-            i, j = lastHintPosition
-            board[i][j] = 0
-            numberOfHintsAdded -= 1
-            # ヒントを戻した後、再度解を探索
-            continue
         else:
             # ステップ⑥ 投票配列に格納
             occurrenceCount = calculateOccurrenceCount(solutions, size)
@@ -101,7 +98,8 @@ def generateUniqueSolutionG3(board, maxSolutions, LIMIT_TIME):
             # ステップ⑨ 最小の値が 2 以上か確認
             if minCount >= 2:
                 # ステップ⑩ フィルタリング処理を行う
-                filteredSolutions = filterSolutionsByHint(solutions, i, j, minValue)
+                filteredSolutions = filterSolutionsByHint(
+                    solutions, i, j, minValue)
                 reusedSolutionsCount = len(filteredSolutions)  # 再利用した解の数
 
                 print(f"ヒントを追加した後の残りの解の数: {reusedSolutionsCount}")
@@ -122,8 +120,8 @@ def generateUniqueSolutionG3(board, maxSolutions, LIMIT_TIME):
                     print(f"解 {idx + 1}:")
                     printBoard(solution)
 
-                # 次のループで再利用する解を保存
-                previousSolutions = filteredSolutions.copy()
+                # ステップ① に戻る前に reuseBoard を更新
+                reuseBoard = filteredSolutions.copy()
 
                 continue  # ステップ①へ戻る
             else:
@@ -131,8 +129,8 @@ def generateUniqueSolutionG3(board, maxSolutions, LIMIT_TIME):
                 # 再利用した解の数は 0
                 numberOfReusedSolutions.append(0)
 
-                # 次のループでは新たに解を生成するため、previousSolutions を空にする
-                previousSolutions = []
+                # 次のループでは新たに解を生成するため、reuseBoard を空にする
+                reuseBoard = []
 
                 continue  # ステップ①へ戻る（再度解を生成）
 
