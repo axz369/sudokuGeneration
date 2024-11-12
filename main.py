@@ -21,17 +21,17 @@ if __name__ == "__main__":
     #########################################################
     # プログラム設定
     INPUT_FILE = 'input9.json'
-    INPUT_KEY = 'input1'
+    INPUT_KEY = 'input2'
 
     ALGORITHM_CHOICE = 3  # 0: 再利用なし(オリジナル盤面保存あり) 1: 再利用なし(盤面保存なし) 2: 再利用あり(解の補充なし), 3: 再利用あり(解の補充あり)
     AddHintToLineTarget = 0  # 1: 線対称にヒントを追加する, 0: 線対称ヒントを追加しない
     LIMIT_TIME = 6000000000000000000
 
     if '9' in INPUT_FILE:
-        MAX_SOLUTIONS = 300
+        MAX_SOLUTIONS = 2000
         TARGET_HINT_COUNT = 16
     elif '16' in INPUT_FILE:
-        MAX_SOLUTIONS = 3000
+        MAX_SOLUTIONS = 300
         TARGET_HINT_COUNT = 51
     elif '25' in INPUT_FILE:
         MAX_SOLUTIONS = 20
@@ -214,29 +214,33 @@ if __name__ == "__main__":
     print(f"生成時間: {generationTime:.2f}秒")
 
     # 各ステップで生成された解の数と再利用した解の数を表示
-    print("\n******************************************")
-    print("各ステップで生成された解の数と再利用した解の数:")
-    print("******************************************")
-    for idx, (generated, reused) in enumerate(zip(numberOfGeneratedBoards, numberOfReusedSolutions)):
-        if reused > 0:
-            print(f"ステップ {idx + 1}: {generated} 個の解が生成され、フィルタリング後に {reused} 個の解を再利用しました")
-        else:
-            print(f"ステップ {idx + 1}: {generated} 個の解が生成されました")
+print("\n******************************************")
+print("各ステップで生成された解の数と再利用した解の数:")
+print("******************************************")
+for idx, (generated, reused) in enumerate(zip(numberOfGeneratedBoards, numberOfReusedSolutions)):
+    if reused > 0:
+        print(f"ステップ {idx + 1}: {generated} 個の解が生成され、フィルタリング後に {reused} 個の解を再利用しました")
+    else:
+        print(f"ステップ {idx + 1}: {generated} 個の解が生成されました")
 
-    print("\n******************************************")
-    print("記録用")
-    print("******************************************")
+print("\n******************************************")
+print("記録用")
+print("******************************************")
 
-    print(f"{generationTime:.2f}")
+print(f"{generationTime:.2f}")
 
-    print(f"{numberOfHintsAdded} ", end="")
-    output_list = []
-    for i in range(len(numberOfGeneratedBoards)):
-        generated = numberOfGeneratedBoards[i]
-        reused = numberOfReusedSolutions[i - 1] if i > 0 else 0
-        if reused > 0:
-            output_list.append(f"{generated}({reused})")
-        else:
-            output_list.append(f"{generated}")
+print(f"{numberOfHintsAdded} ", end="")
+output_list = []
+for i in range(len(numberOfGeneratedBoards)):
+    generated = numberOfGeneratedBoards[i]
+    reused = numberOfReusedSolutions[i - 1] if i > 0 else 0
+    if reused > 0:
+        output_list.append(f"{generated}({reused})")
+    else:
+        output_list.append(f"{generated}")
 
-    print(f"[{', '.join(output_list)}]")
+# 最後の要素が '1' であれば削除
+if output_list and output_list[-1] == '1':
+    output_list.pop()
+
+print(f"[{', '.join(output_list)}]")
