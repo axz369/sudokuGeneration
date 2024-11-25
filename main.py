@@ -266,5 +266,5 @@ if output_list and output_list[-1] == '1':
 print(f"[{', '.join(output_list)}]")
 
 # 時間表示を小数点第2位までフォーマット
-formatted_timePerHint = [f"{t:.2f}" for t in timePerHint]
+formatted_timePerHint = [f"{t:.3f}" for t in timePerHint]
 print(formatted_timePerHint)
