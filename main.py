@@ -21,24 +21,36 @@ if __name__ == "__main__":
     #########################################################
     # プログラム設定
     INPUT_FILE = 'input9.json'
-    INPUT_KEY = 'input2'
+    INPUT_KEY = 'input1'
 
-    ALGORITHM_CHOICE = 3  # 0: 再利用なし(オリジナル盤面保存あり) 1: 再利用なし(盤面保存なし) 2: 再利用あり(解の補充なし), 3: 再利用あり(解の補充あり)
+    # 0: 再利用なし(オリジナル盤面保存あり) 1: 再利用なし(盤面保存なし) 2: 再利用あり(解の補充なし), 3: 再利用あり(解の補充あり)
+    ALGORITHM_CHOICE = 1
     AddHintToLineTarget = 0  # 1: 線対称にヒントを追加する, 0: 線対称ヒントを追加しない
+    # 0 : 毎回MAX_SOLUTIONS個生成．1:generationLimitsに格納された上限数をヒント追加ごとに設定
+    changeGenerationLimit = 1
+
     LIMIT_TIME = 6000000000000000000
 
     if '9' in INPUT_FILE:
         MAX_SOLUTIONS = 2000
         TARGET_HINT_COUNT = 16
+        generationLimits = [100, 100, 100, 100, 100, 1000, 2000,
+                           2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000]
     elif '16' in INPUT_FILE:
         MAX_SOLUTIONS = 300
         TARGET_HINT_COUNT = 51
+        generationLimits = [1000, 1000, 1000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+                           2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000]
     elif '25' in INPUT_FILE:
         MAX_SOLUTIONS = 20
         TARGET_HINT_COUNT = 250
+        generationLimits = [1000, 1000, 1000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
+                           2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000]
     else:
         MAX_SOLUTIONS = 10
         TARGET_HINT_COUNT = 200
+        generationLimits = [1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000,
+                           1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000]
     #########################################################
 
     # JSONファイルを読み込む
@@ -68,7 +80,8 @@ if __name__ == "__main__":
         print("バリデーション成功")
 
     # generateSolutionBoard関数を使用して解盤面Aを取得
-    boardA = [row[:] for row in dataConvertedToNumbers['boardConvertedToNumber']]
+    boardA = [row[:]
+              for row in dataConvertedToNumbers['boardConvertedToNumber']]
 
     isSolutionGenerated = generateSolutionBoardG(boardA)
 
@@ -89,7 +102,8 @@ if __name__ == "__main__":
         symmetricBoards = symmetryAdder.getSymmetricBoards()
 
         # 対称性タイプのリストを定義
-        symmetryTypes = ["horizontal", "vertical", "diagonal_up", "diagonal_down"]
+        symmetryTypes = ["horizontal", "vertical",
+                         "diagonal_up", "diagonal_down"]
 
         # 対称軸に追加した直後の盤面を表示
         print("******************************************")
@@ -135,8 +149,10 @@ if __name__ == "__main__":
 
     else:
         # 対称性に基づいたヒント追加をスキップし、ランダムにヒントを追加
-        selectedBoard = [[0 for _ in range(maxNumber)] for _ in range(maxNumber)]  # 空の盤面を作成
-        positions = [(i, j) for i in range(maxNumber) for j in range(maxNumber)]
+        selectedBoard = [[0 for _ in range(maxNumber)]
+                         for _ in range(maxNumber)]  # 空の盤面を作成
+        positions = [(i, j) for i in range(maxNumber)
+                     for j in range(maxNumber)]
         random.shuffle(positions)
 
         # 入力盤面のヒントを追加
@@ -168,18 +184,21 @@ if __name__ == "__main__":
         problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionOriginal(
             selectedBoard, MAX_SOLUTIONS, LIMIT_TIME)
         numberOfGeneratedBoards = solutionsPerIteration  # 変数名を統一
-        numberOfReusedSolutions = [0] * len(solutionsPerIteration)  # 再利用した解の数は0
-    elif ALGORITHM_CHOICE == 1: #問題例,解盤面,追加したヒントの数,再利用した解盤面数
-        problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionG1(
-            selectedBoard, MAX_SOLUTIONS, LIMIT_TIME)
+        numberOfReusedSolutions = [0] * \
+            len(solutionsPerIteration)  # 再利用した解の数は0
+    elif ALGORITHM_CHOICE == 1:  # 問題例,解盤面,追加したヒントの数,再利用した解盤面数
+        problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration, timePerHint = generateUniqueSolutionG1(
+            selectedBoard, MAX_SOLUTIONS, LIMIT_TIME, changeGenerationLimit, generationLimits)
         numberOfGeneratedBoards = solutionsPerIteration  # 変数名を統一
-        numberOfReusedSolutions = [0] * len(solutionsPerIteration)  # 再利用した解の数は0
+        numberOfReusedSolutions = [0] * \
+            len(solutionsPerIteration)  # 再利用した解の数は0
     elif ALGORITHM_CHOICE == 2:
         problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionG2(
             selectedBoard, MAX_SOLUTIONS, LIMIT_TIME)
         numberOfGeneratedBoards = solutionsPerIteration  # 変数名を統一
-        numberOfReusedSolutions = [0] * len(solutionsPerIteration)  # 再利用した解の数は0
-    elif ALGORITHM_CHOICE == 3: #問題例,解盤面,追加したヒントの数,再利用した解盤面数
+        numberOfReusedSolutions = [0] * \
+            len(solutionsPerIteration)  # 再利用した解の数は0
+    elif ALGORITHM_CHOICE == 3:  # 問題例,解盤面,追加したヒントの数,再利用した解盤面数
         problemExample, uniqueSolution, numberOfHintsAdded, numberOfGeneratedBoards, numberOfReusedSolutions = generateUniqueSolutionG3(
             selectedBoard, MAX_SOLUTIONS, LIMIT_TIME)
 
@@ -219,7 +238,8 @@ print("各ステップで生成された解の数と再利用した解の数:")
 print("******************************************")
 for idx, (generated, reused) in enumerate(zip(numberOfGeneratedBoards, numberOfReusedSolutions)):
     if reused > 0:
-        print(f"ステップ {idx + 1}: {generated} 個の解が生成され、フィルタリング後に {reused} 個の解を再利用しました")
+        print(
+            f"ステップ {idx + 1}: {generated} 個の解が生成され、フィルタリング後に {reused} 個の解を再利用しました")
     else:
         print(f"ステップ {idx + 1}: {generated} 個の解が生成されました")
 
@@ -244,3 +264,4 @@ if output_list and output_list[-1] == '1':
     output_list.pop()
 
 print(f"[{', '.join(output_list)}]")
+print(timePerHint)
