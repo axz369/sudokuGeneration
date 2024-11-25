@@ -27,7 +27,7 @@ if __name__ == "__main__":
     ALGORITHM_CHOICE = 1
     AddHintToLineTarget = 0  # 1: 線対称にヒントを追加する, 0: 線対称ヒントを追加しない
     # 0 : 毎回MAX_SOLUTIONS個生成．1:generationLimitsに格納された上限数をヒント追加ごとに設定
-    changeGenerationLimit = 1
+    changeGenerationLimit = 0
 
     LIMIT_TIME = 6000000000000000000
 
@@ -264,4 +264,7 @@ if output_list and output_list[-1] == '1':
     output_list.pop()
 
 print(f"[{', '.join(output_list)}]")
-print(timePerHint)
+
+# 時間表示を小数点第2位までフォーマット
+formatted_timePerHint = [f"{t:.2f}" for t in timePerHint]
+print(formatted_timePerHint)
