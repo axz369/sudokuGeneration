@@ -265,6 +265,6 @@ if output_list and output_list[-1] == '1':
 
 print(f"[{', '.join(output_list)}]")
 
-# 時間表示を小数点第2位までフォーマット
-formatted_timePerHint = [f"{t:.3f}" for t in timePerHint]
-print(formatted_timePerHint)
+# 小数点第3位まで四捨五入したリストを出力
+formatted_times = [f"{round(time, 3)}" for time in timePerHint]
+print(", ".join(formatted_times))
