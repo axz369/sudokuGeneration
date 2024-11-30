@@ -122,7 +122,7 @@ if __name__ == "__main__":
 
         # チャレンジ回数を増やす
         challenge_count += 1
-        print(f"\n=== チャレンジ {challenge_count} ===")
+        print(f"\n=== {challenge_count}回目 ===")
 
         # 唯一解の生成の開始時間
         startTime = time.time()
@@ -250,7 +250,7 @@ if __name__ == "__main__":
 
     # 各チャレンジの結果を表示
     for idx in range(challenge_count):
-        print(f"\n--- チャレンジ {idx + 1} ---")
+        print(f"\n{idx + 1}回目")
         print(f"処理時間: {challenge_times[idx]:.2f}秒")
 
         # 生成盤面数のリストのコピー
@@ -287,18 +287,10 @@ if __name__ == "__main__":
     if solutions_list and solutions_list[-1] == 1:
         solutions_list.pop()
 
-    # ヒント追加回数と生成盤面数のリストを表示
-    print(f"{hints_added}[{', '.join(map(str, solutions_list))}]")
-
     # 全体の処理時間を小数点第2位までで四捨五入して表示
     total_generation_time_rounded = round(total_generation_time, 2)
-    print(f"総生成時間: {total_generation_time_rounded}秒")
+    print(total_generation_time_rounded)
 
-    # ヒント追加ごとの生成時間も表示
-    print("ヒント追加ごとの生成時間（秒）:")
-    # 時間のリストをコピーし、solutions_list の長さに合わせる
-    time_list = best_time_per_hint.copy()
-    if len(time_list) > len(solutions_list):
-        time_list = time_list[:len(solutions_list)]
-    print([round(t, 3) for t in time_list])
+    # ヒント追加回数と生成盤面数のリストを表示
+    print(f"{hints_added}[{', '.join(map(str, solutions_list))}]")
     ###############################################
