@@ -29,28 +29,9 @@ if __name__ == "__main__":
     # 0 : 毎回MAX_SOLUTIONS個生成．1:generationLimitsに格納された上限数をヒント追加ごとに設定
     changeGenerationLimit = 0
 
-    LIMIT_TIME = 6000000000000000000
+    # 全体の時間制限を30分に設定
+    TOTAL_LIMIT_TIME = 30 * 60  # 30分を秒に換算
 
-    if '9' in INPUT_FILE:
-        MAX_SOLUTIONS = 2000
-        TARGET_HINT_COUNT = 16
-        generationLimits = [100, 100, 100, 100, 100, 1000, 2000,
-                           2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000]
-    elif '16' in INPUT_FILE:
-        MAX_SOLUTIONS = 300
-        TARGET_HINT_COUNT = 51
-        generationLimits = [1000, 1000, 1000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
-                           2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000]
-    elif '25' in INPUT_FILE:
-        MAX_SOLUTIONS = 20
-        TARGET_HINT_COUNT = 250
-        generationLimits = [1000, 1000, 1000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000,
-                           2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000]
-    else:
-        MAX_SOLUTIONS = 10
-        TARGET_HINT_COUNT = 200
-        generationLimits = [1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000,
-                           1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000]
     #########################################################
 
     # JSONファイルを読み込む
@@ -61,6 +42,20 @@ if __name__ == "__main__":
     sudokuProblem = data["inputs"][INPUT_KEY]
     board = sudokuProblem["board"]
     maxNumber = sudokuProblem["maxNumber"]
+
+    # maxNumberに応じて設定
+    if maxNumber == 9:
+        TARGET_HINT_COUNT = 16
+        TARGET_ADDED_HINTS = 5  # 追加ヒント数が5の盤面を目指す
+    elif maxNumber == 16:
+        TARGET_HINT_COUNT = 51
+        TARGET_ADDED_HINTS = None  # 特に設定しない
+    elif maxNumber == 25:
+        TARGET_HINT_COUNT = 281  # 全マスの45%
+        TARGET_ADDED_HINTS = None  # 特に設定しない
+    else:
+        TARGET_HINT_COUNT = 16  # デフォルト値
+        TARGET_ADDED_HINTS = None
 
     # 入力盤面を表示
     print("入力盤面:")
@@ -92,179 +87,176 @@ if __name__ == "__main__":
         print("解盤面Aが生成されました")
         printBoard(converter.convertBack(boardA))
 
-    # AddHintToLineTarget の値に応じて処理を分岐
-    if AddHintToLineTarget == 1:
-        # 対称性に基づいたヒントを追加するクラスを作成
-        symmetryAdder = AddHintToLineSymmetry(
-            dataConvertedToNumbers['boardConvertedToNumber'], boardA)
+    # ここから修正箇所
+    ###############################################
+    # 追加ヒント数の最小値を設定
+    min_added_hints = None
+    best_problem_example = None
+    best_unique_solution = None
+    best_number_of_generated_boards = None
+    best_number_of_reused_solutions = None
+    best_time_per_hint = None
 
-        # 4つの対称盤面を取得
-        symmetricBoards = symmetryAdder.getSymmetricBoards()
+    # チャレンジ回数
+    challenge_count = 0
 
-        # 対称性タイプのリストを定義
-        symmetryTypes = ["horizontal", "vertical",
-                         "diagonal_up", "diagonal_down"]
+    # 各チャレンジの情報を保存するリスト
+    challenge_times = []
+    challenge_problem_examples = []
+    challenge_unique_solutions = []
+    challenge_added_hints = []
+    challenge_generated_boards = []
+    challenge_reused_solutions = []
+    challenge_time_per_hint = []
 
-        # 対称軸に追加した直後の盤面を表示
-        print("******************************************")
-        print("対称軸に追加した直後の盤面:")
-        print("******************************************")
+    # 全体の開始時間
+    total_start_time = time.time()
 
-        for symmetry_type, board in zip(symmetryTypes, symmetricBoards):
-            print(f"\n{symmetry_type}Symmetry:")
-            printBoard(converter.convertBack(board))
+    while True:
+        # 30分を超えたら終了
+        current_time = time.time()
+        if current_time - total_start_time > TOTAL_LIMIT_TIME:
+            print("30分を超えたため処理を終了します。")
+            break
 
-        # ヒント数の統一処理
-        hintUnifier = UnifiedNumberOfHints(
-            symmetricBoards, boardA, targetHintCount=TARGET_HINT_COUNT)
-        unifiedBoards = hintUnifier.unifyHints()
+        # チャレンジ回数を増やす
+        challenge_count += 1
+        print(f"\n=== チャレンジ {challenge_count} ===")
 
-        # ヒント数統一後の盤面を表示
-        print("\n******************************************")
-        print("ヒント数統一後の盤面:")
-        print("******************************************")
-        for symmetry_type, board in zip(symmetryTypes, unifiedBoards):
-            print(f"\n{symmetry_type}Symmetry:")
-            printBoard(converter.convertBack(board))
+        # 唯一解の生成の開始時間
+        startTime = time.time()
 
-        # 4盤面から選択
-        while True:
-            print("\nどの盤面を選びますか?")
-            for i, name in enumerate(symmetryTypes):
-                print(f"{i + 1}: {name}Symmetry")
+        # ランダムにヒントを追加する
+        if AddHintToLineTarget == 1:
+            # 対称性に基づいたヒント追加の処理（必要に応じて実装）
+            pass
+        else:
+            # ランダムにヒントを追加
+            selectedBoard = [[0 for _ in range(maxNumber)]
+                             for _ in range(maxNumber)]  # 空の盤面を作成
+            positions = [(i, j) for i in range(maxNumber)
+                         for j in range(maxNumber)]
+            random.shuffle(positions)
 
-            try:
-                choice = int(input("選択: ")) - 1
-                if 0 <= choice < len(symmetryTypes):
-                    selectedBoard = unifiedBoards[choice]
-                    selectedBoardName = f"{symmetryTypes[choice]}Symmetry"
+            # 入力盤面のヒントを追加
+            hints_added = 0
+            for i in range(maxNumber):
+                for j in range(maxNumber):
+                    if dataConvertedToNumbers['boardConvertedToNumber'][i][j] != 0:
+                        selectedBoard[i][j] = dataConvertedToNumbers['boardConvertedToNumber'][i][j]
+                        hints_added += 1
+
+            # 残りのヒントをランダムに追加
+            for pos in positions:
+                if hints_added >= TARGET_HINT_COUNT:
                     break
-                else:
-                    print("無効な選択です。もう一度選んでください。")
-            except ValueError:
-                print("無効な入力です。数字で選択してください。")
-
-        print(f"選ばれた盤面 : {selectedBoardName}")
-        printBoard(selectedBoard)
-
-    else:
-        # 対称性に基づいたヒント追加をスキップし、ランダムにヒントを追加
-        selectedBoard = [[0 for _ in range(maxNumber)]
-                         for _ in range(maxNumber)]  # 空の盤面を作成
-        positions = [(i, j) for i in range(maxNumber)
-                     for j in range(maxNumber)]
-        random.shuffle(positions)
-
-        # 入力盤面のヒントを追加
-        hints_added = 0
-        for i in range(maxNumber):
-            for j in range(maxNumber):
-                if dataConvertedToNumbers['boardConvertedToNumber'][i][j] != 0:
-                    selectedBoard[i][j] = dataConvertedToNumbers['boardConvertedToNumber'][i][j]
+                i, j = pos
+                if selectedBoard[i][j] == 0:
+                    selectedBoard[i][j] = boardA[i][j]
                     hints_added += 1
 
-        # 残りのヒントをランダムに追加
-        for pos in positions:
-            if hints_added >= TARGET_HINT_COUNT:
+            selectedBoardName = "Random Hints"
+            print("対称性に基づいたヒント追加をスキップし、解盤面Aからランダムにヒントを追加しました。")
+            print(f"選ばれた盤面 : {selectedBoardName}")
+            printBoard(selectedBoard)
+
+        # maxNumberに応じた設定
+        if maxNumber == 9:
+            MAX_SOLUTIONS = 100
+            # TARGET_ADDED_HINTS は既に設定済み
+        elif maxNumber == 16:
+            MAX_SOLUTIONS = None  # 上限盤面数を特に設定しない
+            # TARGET_ADDED_HINTS は None
+        elif maxNumber == 25:
+            MAX_SOLUTIONS = None  # 上限盤面数を特に設定しない
+            # TARGET_ADDED_HINTS は None
+        else:
+            MAX_SOLUTIONS = 100
+            # TARGET_ADDED_HINTS は None
+
+        if ALGORITHM_CHOICE == 1:
+            if changeGenerationLimit == 0:
+                generationLimits = None
+            else:
+                # generationLimitsを設定する必要がある場合はここで設定
+                generationLimits = None  # 必要に応じて設定
+
+            # selectedBoard のコピーを作成
+            currentBoard = [row[:] for row in selectedBoard]
+
+            problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration, timePerHint = generateUniqueSolutionG1(
+                currentBoard, MAX_SOLUTIONS, TOTAL_LIMIT_TIME - (current_time - total_start_time), changeGenerationLimit, generationLimits)
+            numberOfGeneratedBoards = solutionsPerIteration
+            numberOfReusedSolutions = [0] * len(solutionsPerIteration)
+
+            endTime = time.time()
+
+            # チャレンジの情報を保存
+            challenge_times.append(endTime - startTime)
+            challenge_problem_examples.append(problemExample)
+            challenge_unique_solutions.append(uniqueSolution)
+            challenge_added_hints.append(numberOfHintsAdded)
+            challenge_generated_boards.append(numberOfGeneratedBoards)
+            challenge_reused_solutions.append(numberOfReusedSolutions)
+            challenge_time_per_hint.append(timePerHint)
+
+            # 最良の盤面を更新
+            if min_added_hints is None or numberOfHintsAdded < min_added_hints:
+                min_added_hints = numberOfHintsAdded
+                best_problem_example = problemExample
+                best_unique_solution = uniqueSolution
+                best_number_of_generated_boards = numberOfGeneratedBoards
+                best_number_of_reused_solutions = numberOfReusedSolutions
+                best_time_per_hint = timePerHint
+
+            # 追加ヒント数が TARGET_ADDED_HINTS 以下なら終了
+            if TARGET_ADDED_HINTS is not None and numberOfHintsAdded <= TARGET_ADDED_HINTS:
+                print(
+                    f"追加ヒント数が {TARGET_ADDED_HINTS} 以下の盤面が見つかったため、処理を終了します。")
                 break
-            i, j = pos
-            if selectedBoard[i][j] == 0:
-                selectedBoard[i][j] = boardA[i][j]
-                hints_added += 1
+        else:
+            print("ALGORITHM_CHOICE が 1 以外は未対応です。")
+            break
 
-        selectedBoardName = "Random Hints"
-        print("対称性に基づいたヒント追加をスキップし、解盤面Aからランダムにヒントを追加しました。")
-        print(f"選ばれた盤面 : {selectedBoardName}")
-        printBoard(selectedBoard)
+    # 最終的な結果を出力
+    print("\n=== 最終結果 ===")
+    print(f"チャレンジ回数: {challenge_count}")
+    print(f"最小の追加ヒント数: {min_added_hints}")
 
-    # 唯一解の生成
-    startTime = time.time()
-
-    if ALGORITHM_CHOICE == 0:
-        problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionOriginal(
-            selectedBoard, MAX_SOLUTIONS, LIMIT_TIME)
-        numberOfGeneratedBoards = solutionsPerIteration  # 変数名を統一
-        numberOfReusedSolutions = [0] * \
-            len(solutionsPerIteration)  # 再利用した解の数は0
-    elif ALGORITHM_CHOICE == 1:  # 問題例,解盤面,追加したヒントの数,再利用した解盤面数
-        problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration, timePerHint = generateUniqueSolutionG1(
-            selectedBoard, MAX_SOLUTIONS, LIMIT_TIME, changeGenerationLimit, generationLimits)
-        numberOfGeneratedBoards = solutionsPerIteration  # 変数名を統一
-        numberOfReusedSolutions = [0] * \
-            len(solutionsPerIteration)  # 再利用した解の数は0
-    elif ALGORITHM_CHOICE == 2:
-        problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration = generateUniqueSolutionG2(
-            selectedBoard, MAX_SOLUTIONS, LIMIT_TIME)
-        numberOfGeneratedBoards = solutionsPerIteration  # 変数名を統一
-        numberOfReusedSolutions = [0] * \
-            len(solutionsPerIteration)  # 再利用した解の数は0
-    elif ALGORITHM_CHOICE == 3:  # 問題例,解盤面,追加したヒントの数,再利用した解盤面数
-        problemExample, uniqueSolution, numberOfHintsAdded, numberOfGeneratedBoards, numberOfReusedSolutions = generateUniqueSolutionG3(
-            selectedBoard, MAX_SOLUTIONS, LIMIT_TIME)
-
-    endTime = time.time()
-
-    if uniqueSolution:
+    if best_unique_solution:
         print("\n******************************************")
         print("唯一解を持つ問題例(数字):")
         print("******************************************")
-        printBoard(problemExample)
+        printBoard(best_problem_example)
 
         print("\n******************************************")
         print("その問題例の解答(数字):")
         print("******************************************")
-        printBoard(uniqueSolution)
+        printBoard(best_unique_solution)
 
         # 数値から文字に変換して表示
         print("\n******************************************")
         print("文字に変換された問題例(文字):")
         print("******************************************")
-        printBoard(converter.convertBack(problemExample))
+        printBoard(converter.convertBack(best_problem_example))
 
         print("\n******************************************")
         print("文字に変換された解答(文字):")
         print("******************************************")
-        printBoard(converter.convertBack(uniqueSolution))
+        printBoard(converter.convertBack(best_unique_solution))
 
     else:
         print("唯一解の生成に失敗しました。")
 
-    generationTime = endTime - startTime
-    print(f"生成時間: {generationTime:.2f}秒")
+    generationTime = sum(challenge_times)
+    print(f"総生成時間: {generationTime:.2f}秒")
 
-    # 各ステップで生成された解の数と再利用した解の数を表示
-print("\n******************************************")
-print("各ステップで生成された解の数と再利用した解の数:")
-print("******************************************")
-for idx, (generated, reused) in enumerate(zip(numberOfGeneratedBoards, numberOfReusedSolutions)):
-    if reused > 0:
-        print(
-            f"ステップ {idx + 1}: {generated} 個の解が生成され、フィルタリング後に {reused} 個の解を再利用しました")
-    else:
-        print(f"ステップ {idx + 1}: {generated} 個の解が生成されました")
+    # 各チャレンジの結果を表示
+    for idx in range(challenge_count):
+        print(f"\n--- チャレンジ {idx + 1} ---")
+        print(f"処理時間: {challenge_times[idx]:.2f}秒")
+        print(f"追加したヒントの数: {challenge_added_hints[idx]}")
+        print(f"再利用した解盤面数: {challenge_reused_solutions[idx]}")
+        # 他の情報も必要に応じて表示
 
-print("\n******************************************")
-print("記録用")
-print("******************************************")
-
-print(f"{generationTime:.2f}")
-
-print(f"{numberOfHintsAdded} ", end="")
-output_list = []
-for i in range(len(numberOfGeneratedBoards)):
-    generated = numberOfGeneratedBoards[i]
-    reused = numberOfReusedSolutions[i - 1] if i > 0 else 0
-    if reused > 0:
-        output_list.append(f"{generated}({reused})")
-    else:
-        output_list.append(f"{generated}")
-
-# 最後の要素が '1' であれば削除
-if output_list and output_list[-1] == '1':
-    output_list.pop()
-
-print(f"[{', '.join(output_list)}]")
-
-# 小数点第3位まで四捨五入したリストを出力
-formatted_times = [f"{round(time, 3)}" for time in timePerHint]
-print(", ".join(formatted_times))
+    ###############################################
