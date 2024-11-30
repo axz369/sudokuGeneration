@@ -23,10 +23,13 @@ if __name__ == "__main__":
     INPUT_FILE = 'input9.json'
     INPUT_KEY = 'input1'
 
-    # 0: 再利用なし(オリジナル盤面保存あり) 1: 再利用なし(盤面保存なし) 2: 再利用あり(解の補充なし), 3: 再利用あり(解の補充あり)
+    # 0: 再利用なし(オリジナル盤面保存あり)
+    # 1: 再利用なし(盤面保存なし)
+    # 2: 再利用あり(解の補充なし)
+    # 3: 再利用あり(解の補充あり)
     ALGORITHM_CHOICE = 1
     AddHintToLineTarget = 0  # 1: 線対称にヒントを追加する, 0: 線対称ヒントを追加しない
-    # 0 : 毎回MAX_SOLUTIONS個生成．1:generationLimitsに格納された上限数をヒント追加ごとに設定
+    # 0: 毎回MAX_SOLUTIONS個生成．1: generationLimitsに格納された上限数をヒント追加ごとに設定
     changeGenerationLimit = 0
 
     # 全体の時間制限を30分に設定
@@ -93,8 +96,7 @@ if __name__ == "__main__":
     min_added_hints = None
     best_problem_example = None
     best_unique_solution = None
-    best_number_of_generated_boards = None
-    best_number_of_reused_solutions = None
+    best_solutions_per_iteration = None
     best_time_per_hint = None
 
     # チャレンジ回数
@@ -105,8 +107,7 @@ if __name__ == "__main__":
     challenge_problem_examples = []
     challenge_unique_solutions = []
     challenge_added_hints = []
-    challenge_generated_boards = []
-    challenge_reused_solutions = []
+    challenge_solutions_per_iteration = []
     challenge_time_per_hint = []
 
     # 全体の開始時間
@@ -156,7 +157,8 @@ if __name__ == "__main__":
                     hints_added += 1
 
             selectedBoardName = "Random Hints"
-            print("対称性に基づいたヒント追加をスキップし、解盤面Aからランダムにヒントを追加しました。")
+            print(
+                "対称性に基づいたヒント追加をスキップし、解盤面Aからランダムにヒントを追加しました。")
             print(f"選ばれた盤面 : {selectedBoardName}")
             printBoard(selectedBoard)
 
@@ -186,9 +188,6 @@ if __name__ == "__main__":
 
             problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration, timePerHint = generateUniqueSolutionG1(
                 currentBoard, MAX_SOLUTIONS, TOTAL_LIMIT_TIME - (current_time - total_start_time), changeGenerationLimit, generationLimits)
-            numberOfGeneratedBoards = solutionsPerIteration
-            numberOfReusedSolutions = [0] * len(solutionsPerIteration)
-
             endTime = time.time()
 
             # チャレンジの情報を保存
@@ -196,8 +195,7 @@ if __name__ == "__main__":
             challenge_problem_examples.append(problemExample)
             challenge_unique_solutions.append(uniqueSolution)
             challenge_added_hints.append(numberOfHintsAdded)
-            challenge_generated_boards.append(numberOfGeneratedBoards)
-            challenge_reused_solutions.append(numberOfReusedSolutions)
+            challenge_solutions_per_iteration.append(solutionsPerIteration)
             challenge_time_per_hint.append(timePerHint)
 
             # 最良の盤面を更新
@@ -205,8 +203,7 @@ if __name__ == "__main__":
                 min_added_hints = numberOfHintsAdded
                 best_problem_example = problemExample
                 best_unique_solution = uniqueSolution
-                best_number_of_generated_boards = numberOfGeneratedBoards
-                best_number_of_reused_solutions = numberOfReusedSolutions
+                best_solutions_per_iteration = solutionsPerIteration
                 best_time_per_hint = timePerHint
 
             # 追加ヒント数が TARGET_ADDED_HINTS 以下なら終了
@@ -248,15 +245,60 @@ if __name__ == "__main__":
     else:
         print("唯一解の生成に失敗しました。")
 
-    generationTime = sum(challenge_times)
-    print(f"総生成時間: {generationTime:.2f}秒")
+    total_generation_time = sum(challenge_times)
+    print(f"\n総生成時間: {total_generation_time:.2f}秒")
 
     # 各チャレンジの結果を表示
     for idx in range(challenge_count):
         print(f"\n--- チャレンジ {idx + 1} ---")
         print(f"処理時間: {challenge_times[idx]:.2f}秒")
-        print(f"追加したヒントの数: {challenge_added_hints[idx]}")
-        print(f"再利用した解盤面数: {challenge_reused_solutions[idx]}")
-        # 他の情報も必要に応じて表示
 
+        # 生成盤面数のリストのコピー
+        solutions_list = challenge_solutions_per_iteration[idx].copy()
+
+        # 最後の要素が1の場合、それを削除
+        if solutions_list and solutions_list[-1] == 1:
+            solutions_list.pop()
+
+        # ヒント追加回数と生成盤面数のリストを表示
+        hints_added = challenge_added_hints[idx]
+        print(f"{hints_added}[{', '.join(map(str, solutions_list))}]")
+
+        # ヒント追加ごとの生成時間も表示（必要に応じて）
+        print("ヒント追加ごとの生成時間（秒）:")
+        # 時間のリストをコピーし、solutions_list の長さに合わせる
+        time_list = challenge_time_per_hint[idx].copy()
+        if len(time_list) > len(solutions_list):
+            time_list = time_list[:len(solutions_list)]
+        print([round(t, 3) for t in time_list])
+
+    # 最良の盤面に対して、要求された形式で表示
+    print("\n******************************************")
+    print("最良の盤面の詳細")
+    print("******************************************")
+
+    # 最良の盤面のヒント追加回数
+    hints_added = min_added_hints
+
+    # 最良の盤面の生成盤面数のリストをコピー
+    solutions_list = best_solutions_per_iteration.copy()
+
+    # 最後の要素が1の場合、それを削除
+    if solutions_list and solutions_list[-1] == 1:
+        solutions_list.pop()
+
+    # ヒント追加回数と生成盤面数のリストを表示
+    print(f"{hints_added}[{', '.join(map(str, solutions_list))}]")
+
+    # 全体の処理時間を小数点第2位までで四捨五入して表示
+    total_generation_time_rounded = round(total_generation_time, 2)
+    print(f"総生成時間: {total_generation_time_rounded}秒")
+
+    # ヒント追加ごとの生成時間も表示
+    print("ヒント追加ごとの生成時間（秒）:")
+    # 時間のリストをコピーし、solutions_list の長さに合わせる
+    time_list = best_time_per_hint.copy()
+    if len(time_list) > len(solutions_list):
+        time_list = time_list[:len(solutions_list)]
+    print([round(t, 3) for t in time_list])
     ###############################################
