@@ -151,7 +151,7 @@ def generateUniqueSolutionG1(board, MAX_SOLUTIONS, LIMIT_TIME, changeGenerationL
         i, j = min_pos
         board[i][j] = min_value
         numberOfHintsAdded += 1  # ヒントを追加したのでカウントを増やす
-        addedHintInformation.append((i, j, min_value))  # 追加したヒントの位置と値を記録
+        addedHintInformation.append((i+1, j+1, min_value))  # 追加したヒントの位置と値を記録
         print(f"マス ({i + 1}, {j + 1}) に {min_value} を追加しました。")
         print(f"現在追加したヒントの数: {numberOfHintsAdded}")
 

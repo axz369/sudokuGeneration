@@ -275,8 +275,15 @@ print("\n******************************************")
 print("記録用")
 print("******************************************")
 
+print()
+
+print("唯一解生成にかかった時間")
 print(f"{generationTime:.2f}")
 
+
+
+print()
+print("ヒント追加回数")
 print(f"{numberOfHintsAdded} ", end="")
 output_list = []
 for i in range(len(numberOfGeneratedBoards)):
@@ -293,9 +300,18 @@ if output_list and output_list[-1] == '1':
 
 print(f"[{', '.join(output_list)}]")
 
+
+
+print()
+print("追加ヒントごとの時間")
 # 小数点第3位まで四捨五入したリストを出力
 formatted_times = [f"{round(time, 3)}" for time in timePerHint]
 print(", ".join(formatted_times))
 
+
+
+print()
 print("追加ヒント情報")
-print(addedHintInformation)
+number_to_char = {v: k for k, v in dataConvertedToNumbers['charToNumberMap'].items()}
+for row, col, num in addedHintInformation:
+    print(f"({row}, {col}, {number_to_char[num]})")
