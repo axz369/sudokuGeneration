@@ -215,7 +215,7 @@ if __name__ == "__main__":
         numberOfReusedSolutions = [0] * \
             len(solutionsPerIteration)  # 再利用した解の数は0
     elif ALGORITHM_CHOICE == 1:  # 問題例,解盤面,追加したヒントの数,再利用した解盤面数
-        problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration, timePerHint = generateUniqueSolutionG1(
+        problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration, timePerHint, addedHintInformation = generateUniqueSolutionG1(
             selectedBoard, MAX_SOLUTIONS, LIMIT_TIME, changeGenerationLimit, generationLimits)
         numberOfGeneratedBoards = solutionsPerIteration  # 変数名を統一
         numberOfReusedSolutions = [0] * \
@@ -296,3 +296,6 @@ print(f"[{', '.join(output_list)}]")
 # 小数点第3位まで四捨五入したリストを出力
 formatted_times = [f"{round(time, 3)}" for time in timePerHint]
 print(", ".join(formatted_times))
+
+print("追加ヒント情報")
+print(addedHintInformation)
