@@ -313,5 +313,4 @@ print(", ".join(formatted_times))
 print()
 print("追加ヒント情報")
 number_to_char = {v: k for k, v in dataConvertedToNumbers['charToNumberMap'].items()}
-for row, col, num in addedHintInformation:
-    print(f"({row}, {col}, {number_to_char[num]})")
+print(",".join(f"({row}, {col}, {number_to_char[num]})" for row, col, num in addedHintInformation))
