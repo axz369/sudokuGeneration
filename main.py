@@ -25,7 +25,13 @@ if __name__ == "__main__":
 
     # 0: 再利用なし(オリジナル盤面保存あり) 1: 再利用なし(盤面保存なし) 2: 再利用あり(解の補充なし), 3: 再利用あり(解の補充あり)
     ALGORITHM_CHOICE = 1
-    AddHintToLineTarget = 0  # 1: 線対称にヒントを追加する, 0: 線対称ヒントを追加しない
+
+    # 0: 規定値なし 1: 規定値あり．規定値になるまでランダム追加する
+    defaultValue = 0
+
+    # 1: 線対称にヒントを追加する, 0: 線対称ヒントを追加しない  
+    AddHintToLineTarget = 0  
+
     # 0 : 毎回MAX_SOLUTIONS個生成．1:generationLimitsに格納された上限数をヒント追加ごとに設定
     changeGenerationLimit = 0
 
@@ -149,33 +155,55 @@ if __name__ == "__main__":
 
     else:
         # 対称性に基づいたヒント追加をスキップし、ランダムにヒントを追加
-        selectedBoard = [[0 for _ in range(maxNumber)]
-                         for _ in range(maxNumber)]  # 空の盤面を作成
-        positions = [(i, j) for i in range(maxNumber)
-                     for j in range(maxNumber)]
-        random.shuffle(positions)
 
-        # 入力盤面のヒントを追加
-        hints_added = 0
-        for i in range(maxNumber):
-            for j in range(maxNumber):
-                if dataConvertedToNumbers['boardConvertedToNumber'][i][j] != 0:
-                    selectedBoard[i][j] = dataConvertedToNumbers['boardConvertedToNumber'][i][j]
+        if(defaultValue==1) : 
+            selectedBoard = [[0 for _ in range(maxNumber)]
+                            for _ in range(maxNumber)]  # 空の盤面を作成
+            positions = [(i, j) for i in range(maxNumber)
+                        for j in range(maxNumber)]
+            random.shuffle(positions)
+
+            # 入力盤面のヒントを追加
+            hints_added = 0
+            for i in range(maxNumber):
+                for j in range(maxNumber):
+                    if dataConvertedToNumbers['boardConvertedToNumber'][i][j] != 0:
+                        selectedBoard[i][j] = dataConvertedToNumbers['boardConvertedToNumber'][i][j]
+                        hints_added += 1
+
+            # 残りのヒントをランダムに追加
+            for pos in positions:
+                if hints_added >= TARGET_HINT_COUNT:
+                    break
+                i, j = pos
+                if selectedBoard[i][j] == 0:
+                    selectedBoard[i][j] = boardA[i][j]
                     hints_added += 1
 
-        # 残りのヒントをランダムに追加
-        for pos in positions:
-            if hints_added >= TARGET_HINT_COUNT:
-                break
-            i, j = pos
-            if selectedBoard[i][j] == 0:
-                selectedBoard[i][j] = boardA[i][j]
-                hints_added += 1
+            selectedBoardName = "Random Hints"
+            print("対称性に基づいたヒント追加をスキップし、解盤面Aからランダムにヒントを追加しました。")
+            print(f"選ばれた盤面 : {selectedBoardName}")
+            printBoard(selectedBoard)
 
-        selectedBoardName = "Random Hints"
-        print("対称性に基づいたヒント追加をスキップし、解盤面Aからランダムにヒントを追加しました。")
-        print(f"選ばれた盤面 : {selectedBoardName}")
-        printBoard(selectedBoard)
+        else :
+            selectedBoard = [[0 for _ in range(maxNumber)]
+                            for _ in range(maxNumber)]  # 空の盤面を作成
+            positions = [(i, j) for i in range(maxNumber)
+                        for j in range(maxNumber)]
+            random.shuffle(positions)
+
+            # 入力盤面のヒントを追加
+            hints_added = 0
+            for i in range(maxNumber):
+                for j in range(maxNumber):
+                    if dataConvertedToNumbers['boardConvertedToNumber'][i][j] != 0:
+                        selectedBoard[i][j] = dataConvertedToNumbers['boardConvertedToNumber'][i][j]
+                        hints_added += 1
+
+            selectedBoardName = "Random Hints"
+            print("対称性に基づいたヒント追加, 規定値へのランダム追加をスキップしました")
+            print(f"選ばれた盤面 : {selectedBoardName}")
+            printBoard(selectedBoard)
 
     # 唯一解の生成
     startTime = time.time()
