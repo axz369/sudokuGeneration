@@ -20,8 +20,8 @@ if __name__ == "__main__":
 
     #########################################################
     # プログラム設定
-    INPUT_FILE = 'input9.json'
-    INPUT_KEY = 'input1'
+    INPUT_FILE = 'matrixInput9.json'
+    INPUT_KEY = 'input5'
 
     # 0: 再利用なし(オリジナル盤面保存あり) 1: 再利用なし(盤面保存なし) 2: 再利用あり(解の補充なし), 3: 再利用あり(解の補充あり)
     ALGORITHM_CHOICE = 1
