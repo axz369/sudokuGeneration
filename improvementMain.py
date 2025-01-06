@@ -101,6 +101,7 @@ if __name__ == "__main__":
     best_unique_solutions = []
     best_solutions_per_iterations = []
     best_time_per_hints = []
+    addedHintInformations = []
 
     # チャレンジ回数
     challenge_count = 0
@@ -189,8 +190,9 @@ if __name__ == "__main__":
             # selectedBoard のコピーを作成
             currentBoard = [row[:] for row in selectedBoard]
 
-            problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration, timePerHint = generateUniqueSolutionG1(
+            problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration, timePerHint, addedHintInformation= generateUniqueSolutionG1(
                 currentBoard, MAX_SOLUTIONS, TOTAL_LIMIT_TIME - (current_time - total_start_time), changeGenerationLimit, generationLimits)
+            addedHintInformations +=addedHintInformation
             endTime = time.time()
 
             # チャレンジの情報を保存
@@ -280,18 +282,18 @@ if __name__ == "__main__":
 
         for idx, (problem, solution, solutions_list, time_list) in enumerate(zip(best_problem_examples, best_unique_solutions, best_solutions_per_iterations, best_time_per_hints)):
             print(f"\n--- 最良の盤面 {idx + 1} ---")
-           # print("唯一解を持つ問題例(数字):")
-            #printBoard(problem)
+            print("唯一解を持つ問題例(数字):")
+            printBoard(problem)
 
-            #print("その問題例の解答(数字):")
-            #printBoard(solution)
+            print("その問題例の解答(数字):")
+            printBoard(solution)
 
             # 数値から文字に変換して表示
-            #print("文字に変換された問題例(文字):")
-            #printBoard(converter.convertBack(problem))
+            print("文字に変換された問題例(文字):")
+            printBoard(converter.convertBack(problem))
 
-            #print("文字に変換された解答(文字):")
-            #printBoard(converter.convertBack(solution))
+            print("文字に変換された解答(文字):")
+            printBoard(converter.convertBack(solution))
 
             # 生成盤面数のリストのコピー
             solutions_list_copy = solutions_list.copy() if solutions_list else []
@@ -316,6 +318,9 @@ if __name__ == "__main__":
             else:
                 print("ヒント追加ごとの生成時間（秒）:")
                 print("[]")
+            
+            print("ヒントの追加位置")
+            print(addedHintInformations) 
     else:
         print("最良の盤面が見つかりませんでした。")
 
