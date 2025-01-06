@@ -33,7 +33,7 @@ if __name__ == "__main__":
     changeGenerationLimit = 0
 
     # 全体の時間制限を30分に設定
-    TOTAL_LIMIT_TIME = 100  # 30分を秒に換算
+    TOTAL_LIMIT_TIME = 1800  # 30分を秒に換算
 
     # 早期終了を有効にするかどうか (0: 無効, 1: 有効)
     EARLY_TERMINATION_ENABLED = 0  # 0または1で設定
@@ -168,7 +168,7 @@ if __name__ == "__main__":
 
         # maxNumberに応じた設定
         if maxNumber == 9:
-            MAX_SOLUTIONS = 100
+            MAX_SOLUTIONS = 1000
             # TARGET_ADDED_HINTS は既に設定済み
         elif maxNumber == 16:
             MAX_SOLUTIONS = None  # 上限盤面数を特に設定しない
@@ -190,9 +190,9 @@ if __name__ == "__main__":
             # selectedBoard のコピーを作成
             currentBoard = [row[:] for row in selectedBoard]
 
-            problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration, timePerHint, addedHintInformation= generateUniqueSolutionG1(
+            problemExample, uniqueSolution, numberOfHintsAdded, solutionsPerIteration, timePerHint, newAddedHintInformation= generateUniqueSolutionG1(
                 currentBoard, MAX_SOLUTIONS, TOTAL_LIMIT_TIME - (current_time - total_start_time), changeGenerationLimit, generationLimits)
-            addedHintInformations +=addedHintInformation
+            addedHintInformations.append(newAddedHintInformation)
             endTime = time.time()
 
             # チャレンジの情報を保存
@@ -319,8 +319,16 @@ if __name__ == "__main__":
                 print("ヒント追加ごとの生成時間（秒）:")
                 print("[]")
             
-            print("ヒントの追加位置")
-            print(addedHintInformations) 
+            # 追加ヒント情報の表示
+            print("ヒントの追加位置:")
+            if idx < len(addedHintInformations):
+                added_hint_information = addedHintInformations[idx]
+                number_to_char = {v: k for k, v in dataConvertedToNumbers['charToNumberMap'].items()}
+                # (row, col, num) 形式で表示
+                print(",".join(f"({row}, {col}, {number_to_char[num]})" for row, col, num in added_hint_information))
+            else:
+                print("追加ヒント情報なし")
+
     else:
         print("最良の盤面が見つかりませんでした。")
 
