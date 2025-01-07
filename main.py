@@ -20,8 +20,8 @@ if __name__ == "__main__":
 
     #########################################################
     # プログラム設定
-    INPUT_FILE = 'matrixInput9.json'
-    INPUT_KEY = 'input5'
+    INPUT_FILE = 'input9.json'
+    INPUT_KEY = 'input1'
 
     # 0: 再利用なし(オリジナル盤面保存あり) 1: 再利用なし(盤面保存なし) 2: 再利用あり(解の補充なし), 3: 再利用あり(解の補充あり)
     ALGORITHM_CHOICE = 1
@@ -38,7 +38,7 @@ if __name__ == "__main__":
     LIMIT_TIME = 6000000000000000000
 
     if '9' in INPUT_FILE:
-        MAX_SOLUTIONS = 2000
+        MAX_SOLUTIONS = 1000
         TARGET_HINT_COUNT = 16
         generationLimits = [100, 100, 100, 100, 100, 1000, 2000,
                            2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000]

@@ -33,7 +33,7 @@ if __name__ == "__main__":
     changeGenerationLimit = 0
 
     # 全体の時間制限を30分に設定
-    TOTAL_LIMIT_TIME = 1800  # 30分を秒に換算
+    TOTAL_LIMIT_TIME = 3600  # 30分を秒に換算
 
     # 早期終了を有効にするかどうか (0: 無効, 1: 有効)
     EARLY_TERMINATION_ENABLED = 0  # 0または1で設定

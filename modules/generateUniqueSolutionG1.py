@@ -109,6 +109,10 @@ def generateUniqueSolutionG1(board, MAX_SOLUTIONS, LIMIT_TIME, changeGenerationL
                 model.addConstr(new_constraint <= max_matching_cells)
 
                 print(f"解 {solution_count}")
+
+                #↓解が見つかった報告を少なくしたいとき
+                #if(solution_count % 100 ==0):
+                #    print(f"解 {solution_count}")
                 # printBoard(solution)
             else:
                 print("全ての解盤面を生成しました。")
